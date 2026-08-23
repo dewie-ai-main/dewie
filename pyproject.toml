@@ -65,7 +65,7 @@ Changelog = "https://github.com/dewie-ai-main/dewie/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 nlp = [
-    "spacy>=3.8.14",
+    "spacy>=3.8.15",
 ]
 docs = [
    "pdfplumber>=0.11.10",
