@@ -1,0 +1,173 @@
+---
+// Vertical "feature explorer": left rail of headers, right panel swaps on click.
+// Progressive enhancement — with no JS every panel shows (nothing is hidden);
+// the inline script hides all but the active one and wires up tabs + arrow keys.
+// `exploreGif` embeds the (compact) multi-hop animation inside the Explore panel.
+import HopScene from "./HopScene.astro";
+const { exploreGif = false } = Astro.props;
+const features = [
+  { id: "learn", label: "Learn", teaser: "Ingest anything, automatically" },
+  { id: "explore", label: "Explore", teaser: "Traverse, don't just query" },
+  { id: "share", label: "Share", teaser: "Let others query your docs" },
+  { id: "control", label: "Control", teaser: "Per-workgroup access" },
+];
+---
+
+<div class="ftabs band" data-ftabs>
+  <div class="ftabs-rail" role="tablist" aria-label="What Dewie does">
+    {
+      features.map((f, i) => (
+        <button
+          class="ftabs-tab"
+          role="tab"
+          id={`tab-${f.id}`}
+          aria-controls={`panel-${f.id}`}
+          aria-selected={i === 0 ? "true" : "false"}
+          tabindex={i === 0 ? "0" : "-1"}
+        >
+          <span class="ftabs-tab-label">{f.label}</span>
+          <span class="ftabs-tab-teaser">{f.teaser}</span>
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="ftabs-panels">
+    <div class="ftabs-panel" role="tabpanel" id="panel-learn" aria-labelledby="tab-learn">
+      <h2 class="band-title">Dewie learns from everything you and your agent see</h2>
+      <p class="band-desc">
+        Dewie reads what you read and explores alongside your agent — or you add documents
+        yourself. It takes in far more than plain text.
+      </p>
+      <ul class="band-list">
+        <li>Ingests URLs, <strong>RSS feeds</strong>, <strong>PDFs</strong>, HTML, and Markdown — not just one format.</li>
+        <li><strong>Gap-aware:</strong> when a query isn't covered by the catalog, Dewie fills the gap with tools like web search — forwarding the results to you and adding them to the catalog for next time.</li>
+        <li>Every feature is a CLI command too — pipe and script ingest, search, and feeds for batch jobs.</li>
+      </ul>
+    </div>
+
+    <div class="ftabs-panel" role="tabpanel" id="panel-explore" aria-labelledby="tab-explore">
+      <h2 class="band-title">Navigate the whole corpus, not just top-k</h2>
+      <p class="band-desc">
+        <code>search_corpus</code>, <code>expand</code>, <code>bridge</code>, and
+        <code>intersect</code> let your agent follow the links between <em>every</em>
+        document — multi-hop, not a single lookup.
+      </p>
+      {exploreGif && <HopScene compact footnote />}
+      <ul class="band-list">
+        <li>Enrichment happens once at write time; query-time is cheap database lookups, not reasoning.</li>
+        <li>That's what lets <strong>small models</strong> drive it — no giant context window required.</li>
+      </ul>
+    </div>
+
+    <div class="ftabs-panel" role="tabpanel" id="panel-share" aria-labelledby="tab-share">
+      <h2 class="band-title">Share your catalog</h2>
+      <p class="band-desc">
+        Let other people or agents query some or all of your documents — make anything
+        you've ingested, from web pages to files, accessible on your terms.
+      </p>
+    </div>
+
+    <div class="ftabs-panel" role="tabpanel" id="panel-control" aria-labelledby="tab-control">
+      <h2 class="band-title">Access controls per workgroup</h2>
+      <p class="band-desc">
+        Per-workgroup access controls with selective, one-way sharing between groups — so
+        the right teams see the right corpus and nothing more.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  for (const root of document.querySelectorAll("[data-ftabs]")) {
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = [...root.querySelectorAll('[role="tabpanel"]')];
+    const select = (i) => {
+      tabs.forEach((t, j) => {
+        const on = i === j;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        panels[j].hidden = !on;
+      });
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => select(i));
+      tab.addEventListener("keydown", (e) => {
+        const last = tabs.length - 1;
+        let n = null;
+        if (e.key === "ArrowDown" || e.key === "ArrowRight") n = i === last ? 0 : i + 1;
+        if (e.key === "ArrowUp" || e.key === "ArrowLeft") n = i === 0 ? last : i - 1;
+        if (e.key === "Home") n = 0;
+        if (e.key === "End") n = last;
+        if (n !== null) {
+          e.preventDefault();
+          select(n);
+          tabs[n].focus();
+        }
+      });
+    });
+    select(0); // JS present → collapse to the first panel (no-JS shows all)
+  }
+</script>
+
+<style>
+  .ftabs {
+    display: grid;
+    grid-template-columns: minmax(190px, 250px) 1fr;
+    gap: 1.75rem;
+    align-items: start;
+  }
+  .ftabs-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .ftabs-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-left: 2px solid transparent;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0 7px 7px 0;
+    cursor: pointer;
+    color: var(--sl-color-gray-2);
+    transition: background 0.15s ease;
+  }
+  .ftabs-tab:hover { background: rgba(0, 220, 200, 0.05); }
+  .ftabs-tab[aria-selected="true"] {
+    border-left-color: var(--sl-color-text-accent);
+    background: rgba(0, 220, 200, 0.07);
+  }
+  .ftabs-tab-label {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--sl-color-white);
+  }
+  .ftabs-tab[aria-selected="true"] .ftabs-tab-label { color: var(--sl-color-text-accent); }
+  .ftabs-tab-teaser { font-size: 0.82rem; color: var(--sl-color-gray-3); }
+  .ftabs-panel { animation: ftabs-fade 0.25s ease; }
+  .ftabs-panel[hidden] { display: none; }
+  @keyframes ftabs-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 46rem) {
+    .ftabs { grid-template-columns: 1fr; gap: 0.9rem; }
+    .ftabs-rail { flex-direction: row; flex-wrap: wrap; gap: 0.4rem; }
+    .ftabs-tab {
+      border-left: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 7px;
+      padding: 0.45rem 0.7rem;
+    }
+    .ftabs-tab[aria-selected="true"] {
+      border-left: none;
+      border-bottom-color: var(--sl-color-text-accent);
+    }
+    .ftabs-tab-teaser { display: none; }
+  }
+</style>

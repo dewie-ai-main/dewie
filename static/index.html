@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dewie — Bringing local models up to the frontier</title>
+  <meta name="description" content="The knowledge infrastructure your agents have been missing. Join the waitlist." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+      --border: var(--border); --purple: var(--purple); --purple-d: var(--purple-dark);
+      --purple-lo: var(--purple-lo); --green: #22c55e;
+      --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+      --sans: 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg); color: var(--text); font-family: var(--sans);
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
+    }
+    /* Soft purple glow behind the hero */
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 70% 50% at 50% 30%, var(--purple-lo) 0%, transparent 70%);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: relative; z-index: 10;
+      padding: 0 32px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid transparent;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo-mark {
+      width: 28px; height: 28px; background: var(--purple); border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-logo-mark svg { width: 15px; height: 15px; fill: #fff; }
+    .nav-logo-text { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; color: var(--text); }
+    .nav-logo-text span { color: var(--purple); }
+    .nav-signin {
+      font-size: 0.82rem; color: var(--dim); text-decoration: none;
+      padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+    .nav-signin:hover { color: var(--text); border-color: var(--border-hi); background: var(--purple-lo); }
+
+    /* ── MAIN ── */
+    main {
+      position: relative; z-index: 1; flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 24px 80px;
+    }
+    .hero { max-width: 560px; width: 100%; text-align: center; }
+
+    /* Eyebrow pill */
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.75rem; font-weight: 500; color: var(--accent-light);
+      background: var(--purple-lo); border: 1px solid var(--border);
+      border-radius: 100px; padding: 5px 16px; margin-bottom: 36px;
+      letter-spacing: 0.04em;
+    }
+    .eyebrow-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green);
+    }
+
+    /* ── USE CASES ── */
+    .use-cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; max-width: 860px; margin: 0 auto 72px; }
+    .use-case { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--dim); }
+    .use-case-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .use-case span { color: var(--text); font-weight: 500; }
+
+    /* Headline */
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700;
+      line-height: 1.1; letter-spacing: -0.04em; margin-bottom: 22px;
+    }
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #c4b5fd, var(--purple) 60%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* Sub */
+    .sub {
+      font-size: 1.05rem; color: var(--dim); line-height: 1.7;
+      margin-bottom: 48px; font-weight: 400;
+    }
+
+    /* Form */
+    .form { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+    .input-row { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+    .email-input {
+      flex: 1; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 13px 18px; color: var(--text);
+      font-size: 0.92rem; font-family: var(--sans); outline: none;
+      transition: border-color 0.2s;
+    }
+    .email-input:focus { border-color: var(--border-hi); }
+    .email-input::placeholder { color: var(--xdim); }
+    .btn-join {
+      background: var(--purple); color: #fff; border: none;
+      padding: 13px 22px; border-radius: 9px;
+      font-size: 0.92rem; font-weight: 600; font-family: var(--sans);
+      cursor: pointer; white-space: nowrap;
+      box-shadow: 0 0 28px var(--border-hi);
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+    .btn-join:hover { background: var(--purple-d); box-shadow: 0 0 40px var(--border-hi); }
+    .btn-join:active { transform: scale(0.98); }
+    .btn-join:disabled { opacity: 0.5; cursor: default; }
+
+    .form-note { font-size: 0.75rem; color: var(--xdim); }
+    .form-note a { color: var(--dim); text-decoration: none; }
+    .form-note a:hover { color: var(--text); }
+
+    /* Success state */
+    .success-msg {
+      display: none; text-align: center;
+      background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 12px; padding: 24px 28px; max-width: 420px;
+    }
+    .success-msg.visible { display: block; }
+    .success-icon { font-size: 1.8rem; margin-bottom: 10px; }
+    .success-title { font-size: 1rem; font-weight: 600; color: var(--green); margin-bottom: 6px; }
+    .success-body { font-size: 0.85rem; color: var(--dim); line-height: 1.6; }
+
+    /* Error */
+    .form-error { font-size: 0.8rem; color: #f87171; min-height: 1.2em; }
+
+
+
+    /* ── INTEGRATIONS ── */
+    .int-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
+    .int-pill { display: flex; align-items: center; gap: 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 0.86rem; color: var(--dim); }
+    .int-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px;
+    }
+    .footer-copy { font-size: 0.75rem; color: var(--xdim); }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a { font-size: 0.75rem; color: var(--dim); text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+  </style>
+  <script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<nav>
+  <a href="/ui/app.html" class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg>
+    </div>
+    <span class="nav-logo-text">dewie</span>
+  </a>
+  <a href="/ui/login.html" class="nav-signin" id="signin-link">Sign in</a>
+</nav>
+
+<main>
+  <div class="hero">
+
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      Early access · Invite only
+    </div>
+
+    <h1>Bringing local models<br>up to the <em>frontier.</em></h1>
+
+    <p class="sub">
+      The knowledge infrastructure your AI agents have been missing.<br>
+      Something worth waiting for.
+    </p>
+
+    <div class="form" id="waitlist-form">
+      <div class="input-row">
+        <input
+          class="email-input"
+          id="email-input"
+          type="email"
+          placeholder="you@company.com"
+          autocomplete="email"
+        />
+        <button class="btn-join" id="join-btn" onclick="joinWaitlist()">
+          Join the waitlist
+        </button>
+      </div>
+      <div class="form-error" id="form-error"></div>
+      <p class="form-note">
+        No spam. Unsubscribe any time. &nbsp;·&nbsp;
+        Already have access? <a href="/ui/login.html">Sign in →</a>
+      </p>
+    </div>
+
+    <div class="success-msg" id="success-msg">
+      <div class="success-icon">✓</div>
+      <div class="success-title">You're on the list.</div>
+      <div class="success-body">
+        We'll reach out when your access is ready.<br>
+        In the meantime — <a href="/ui/login.html" style="color:var(--accent-light);text-decoration:none">sign in if you already have an invite</a>.
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <span class="footer-copy">© 2026 Dewie</span>
+</footer>
+
+
+<script>
+async function joinWaitlist() {
+  const emailEl = document.getElementById('email-input');
+  const errEl   = document.getElementById('form-error');
+  const btn     = document.getElementById('join-btn');
+  const email   = emailEl.value.trim();
+
+  errEl.textContent = '';
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    emailEl.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Joining…';
+
+  try {
+    const res = await fetch('/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (res.status === 409) {
+      errEl.textContent = 'That email is already on the waitlist. Check your inbox for an invite!';
+      btn.disabled = false;
+      btn.textContent = 'Join the waitlist';
+      return;
+    }
+    if (!res.ok) {
+      errEl.textContent = 'Something went wrong. Try again later.';
+      btn.disabled = false;
+      btn.textContent = 'Join the waitlist';
+      return;
+    }
+    // Success
+    document.getElementById('waitlist-form').style.display = 'none';
+    document.getElementById('success-msg').classList.add('visible');
+  } catch (e) {
+    errEl.textContent = 'Network error. Please check your connection.';
+    btn.disabled = false;
+    btn.textContent = 'Join the waitlist';
+  }
+}
+
+// Submit on Enter
+document.getElementById('email-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinWaitlist();
+});
+
+// If already signed in, swap sign-in link to "Open app"
+// Only update the link if the user has an active authenticated session.
+// /auth/me returns authenticated:false when auth is enabled and no session
+// cookie is present, so we must check that flag explicitly (issue #219).
+(async () => {
+  try {
+    const me = await fetch(window._pfx + '/api/auth/me', {credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+    if (me && me.authenticated === true) {
+      const link = document.getElementById('signin-link');
+      if (link) { link.href = '/ui/app.html'; link.textContent = 'Open app →'; }
+    }
+  } catch(e) {}
+})();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

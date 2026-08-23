@@ -1,0 +1,71 @@
+# docker-compose.podcast.yml — On-demand podcast episode ingestion
+#
+# Transcribes podcast episodes using local Whisper (no API key required) and
+# writes transcripts to the Dewie database.
+#
+# Prerequisites:
+#   - Infrastructure running: docker compose -f docker-compose.infra.yml up -d
+#   - An image with a Whisper backend baked in (see note below)
+#   - DEWIE_DSN pointing at your database (env var or .env.docker)
+#
+# Usage (single run):
+#   FEED_URL=https://feeds.example.com/podcast.rss \
+#   docker compose -f docker-compose.infra.yml -f docker-compose.podcast.yml \
+#     --profile podcast run --rm podcast-ingest
+#
+# Override options:
+#   FEED_URL=https://...  LIMIT=5  MODEL=small  CORPUS_ID=<corpus UUID>  SINCE=2026-01-01
+#   (CORPUS_ID must be an existing corpus UUID; episodes are always grouped by
+#    feed host via the `source` field, so most runs don't need it.)
+#
+# Note on Whisper:
+#   Whisper is NOT included in the base image to keep image size small.
+#   Bake it in at build time (faster-whisper is the lighter backend):
+#     docker build --build-arg EXTRA_DEPS="faster-whisper" -t dewie/app:podcast .
+#   then set:  image: dewie/app:podcast  below (or export PODCAST_IMAGE).
+
+services:
+  podcast-ingest:
+    image: ${PODCAST_IMAGE:-dewie/app:podcast}
+    command: >
+      python /app/scripts/ingest_podcast.py
+      ${FEED_URL:?FEED_URL is required}
+      --limit ${LIMIT:-10}
+      --model ${MODEL:-base}
+      ${CORPUS_ID:+--corpus-id ${CORPUS_ID}}
+      ${SINCE:+--since ${SINCE}}
+    entrypoint: []
+    environment:
+      PYTHONPATH: /app/src
+      DEWIE_DSN: ${DEWIE_DSN:-postgresql://dewie:dewie@postgres:5432/dewie}
+      # Whisper model cache — mounted volume avoids re-downloading on every run
+      HF_HOME: /app/.cache/huggingface
+      XDG_CACHE_HOME: /app/.cache
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./data:/app/data
+      # Persist downloaded Whisper model weights across runs
+      - whisper-model-cache:/app/.cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+    profiles:
+      - podcast   # only starts when: docker compose --profile podcast ...
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  whisper-model-cache:
+    driver: local

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dewie — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+      --border: var(--border); --purple: var(--purple);
+      --purple-lo: var(--purple-lo); --green: #22c55e;
+      --red: #ef4444; --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+      --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg); color: var(--text); font-family: var(--sans);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
+    }
+
+    .container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 420px;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 32px;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; margin-bottom: 28px;
+      justify-content: center;
+    }
+
+    .logo-mark {
+      width: 28px; height: 28px; background: var(--purple);
+      border-radius: 7px; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
+    }
+
+    .logo-mark svg { width: 15px; height: 15px; fill: #fff; }
+
+    .logo-text {
+      font-family: var(--mono); font-size: 0.9rem; font-weight: 500; color: var(--text);
+    }
+    .logo-text span { color: var(--purple); }
+
+    .title {
+      font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 0.85rem; color: var(--dim); margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .label {
+      display: block; font-size: 0.8rem; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 8px; font-weight: 500;
+    }
+
+    .input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 8px; padding: 11px 14px; color: var(--text);
+      font-size: 0.9rem; font-family: var(--sans); outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input:focus { border-color: var(--purple); }
+    .input::placeholder { color: var(--xdim); }
+
+    .btn-primary {
+      width: 100%; background: var(--purple); color: #fff; border: none;
+      padding: 11px 16px; border-radius: 8px; font-size: 0.875rem;
+      font-weight: 500; font-family: var(--sans); cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: var(--purple-dark); }
+    .btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 24px;
+      border-bottom: 1px solid var(--border); padding-bottom: 12px;
+    }
+
+    .tab {
+      flex: 1; padding: 8px; border: none; background: none; color: var(--dim);
+      font-size: 0.8rem; font-family: var(--sans); cursor: pointer;
+      border-radius: 6px 6px 0 0; transition: all 0.15s;
+    }
+
+    .tab.active {
+      color: var(--accent-light); background: var(--purple-lo);
+    }
+
+    .tab:hover:not(.active) { color: var(--text); background: var(--bg3); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .error {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px; padding: 12px; font-size: 0.8rem; color: #f87171;
+      margin-bottom: 16px; display: none;
+    }
+
+    .error.show { display: block; }
+
+    .success {
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 8px; padding: 12px; font-size: 0.8rem; color: #86efac;
+      margin-bottom: 16px; display: none;
+    }
+
+    .success.show { display: block; }
+
+    .hint {
+      font-size: 0.75rem; color: var(--dim); margin-top: 6px;
+    }
+
+    .divider {
+      text-align: center; margin: 20px 0; font-size: 0.75rem; color: var(--dim);
+    }
+
+    .divider span {
+      background: var(--bg2); padding: 0 8px;
+    }
+
+    .divider-line {
+      height: 1px; background: var(--border); margin: 0 0 10px 0;
+      position: relative; top: -12px;
+    }
+
+    .help-text {
+      font-size: 0.75rem; color: var(--dim); text-align: center; margin-top: 16px;
+    }
+
+    .help-text a {
+      color: var(--accent-light); text-decoration: none;
+    }
+
+    .help-text a:hover { text-decoration: underline; }
+
+    .spinner {
+      display: inline-block; animation: spin 1s linear infinite;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+  <script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <!-- LOGO -->
+    <a href="/ui/app.html" class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg>
+      </div>
+      <span class="logo-text">dewie</span>
+    </a>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" data-tab="login">Login</button>
+      <button class="tab" data-tab="signup">Sign up</button>
+    </div>
+
+    <!-- LOGIN TAB -->
+    <div id="login" class="tab-content active">
+      <div class="title">Welcome back</div>
+      <div class="subtitle">Sign in to your account</div>
+
+      <div class="error" id="login-error"></div>
+      <div class="success" id="login-success">✓ Login successful, redirecting...</div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="label" for="login-email">Username or email</label>
+          <input class="input" id="login-email" type="text" placeholder="username or email" required autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="login-password">Password</label>
+          <input class="input" id="login-password" type="password" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" class="btn-primary" id="login-btn">
+          <span id="login-btn-text">Sign in</span>
+        </button>
+      </form>
+
+      <div class="help-text">
+        Don't have an account? <a href="#" onclick="switchTab('signup'); return false;">Sign up</a>
+      </div>
+    </div>
+
+    <!-- SIGNUP TAB -->
+    <div id="signup" class="tab-content">
+      <div class="title">Create account</div>
+      <div class="subtitle">Join and start using Dewie</div>
+
+      <div class="error" id="signup-error"></div>
+      <div class="success" id="signup-success">✓ Account created! Redirecting...</div>
+
+      <form id="signup-form" onsubmit="handleSignup(event)">
+        <div class="form-group">
+          <label class="label" for="signup-email">Username or email</label>
+          <input class="input" id="signup-email" type="text" placeholder="username or email" required autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="signup-name">Name (optional)</label>
+          <input class="input" id="signup-name" type="text" placeholder="Your name" />
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="signup-password">Password</label>
+          <input class="input" id="signup-password" type="password" placeholder="••••••••" required />
+          <div class="hint">At least 8 characters recommended</div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="signup-btn">
+          <span id="signup-btn-text">Create account</span>
+        </button>
+      </form>
+
+      <div class="help-text">
+        Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── API base path ─────────────────────────────────────────────────────────
+
+const API = window._pfx + '/api';
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  clearErrors();
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', (e) => {
+    switchTab(e.target.dataset.tab);
+  });
+});
+
+// ── Error/Success handling ────────────────────────────────────────────────
+
+function clearErrors() {
+  document.querySelectorAll('.error').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('.success').forEach(el => {
+    el.classList.remove('show');
+    el.style.display = '';
+  });
+}
+
+function showError(tab, message) {
+  clearErrors();
+  const el = document.getElementById(`${tab}-error`);
+  el.textContent = message || 'Something went wrong. Try again.';
+  el.classList.add('show');
+}
+
+function showSuccess(tab, message) {
+  clearErrors();
+  const el = document.getElementById(`${tab}-success`);
+  el.textContent = message || 'Success!';
+  el.style.display = 'block';
+  el.classList.add('show');
+}
+
+// ── Login handler ─────────────────────────────────────────────────────────
+
+async function handleLogin(e) {
+  e.preventDefault();
+  clearErrors();
+
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!email || !password) {
+    showError('login', 'Please fill in all fields');
+    return;
+  }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner">⟳</span> <span id="login-btn-text">Signing in...</span>';
+
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username: email, password })
+    });
+
+    if (res.ok) {
+      showSuccess('login', '✓ Login successful, redirecting...');
+      setTimeout(() => {
+        window.location.href = window._pfx + '/ui/app.html';
+      }, 500);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      const detail = data.detail;
+      const msg = Array.isArray(detail)
+        ? detail.map(e => e.msg || JSON.stringify(e)).join('; ')
+        : (typeof detail === 'string' ? detail : 'Login failed. Check your email and password.');
+      showError('login', msg);
+      btn.disabled = false;
+      btn.innerHTML = '<span id="login-btn-text">Sign in</span>';
+    }
+  } catch (err) {
+    showError('login', 'Network error. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<span id="login-btn-text">Sign in</span>';
+  }
+}
+
+// ── Signup handler ────────────────────────────────────────────────────────
+
+async function handleSignup(e) {
+  e.preventDefault();
+  clearErrors();
+
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const name = document.getElementById('signup-name').value.trim() || null;
+
+  if (!email || !password) {
+    showError('signup', 'Please fill in all required fields');
+    return;
+  }
+
+  if (password.length < 8) {
+    showError('signup', 'Password must be at least 8 characters');
+    return;
+  }
+
+  const btn = document.getElementById('signup-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner">⟳</span> <span id="signup-btn-text">Creating account...</span>';
+
+  try {
+    const res = await fetch(`${API}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username: email, password, name })
+    });
+
+    if (res.ok) {
+      showSuccess('signup', '✓ Account created! Redirecting...');
+      setTimeout(() => {
+        window.location.href = window._pfx + '/ui/app.html';
+      }, 500);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      const detail = data.detail;
+      const msg = Array.isArray(detail)
+        ? detail.map(e => e.msg || JSON.stringify(e)).join('; ')
+        : (typeof detail === 'string' ? detail : 'Signup failed. This username might already be in use.');
+      showError('signup', msg);
+      btn.disabled = false;
+      btn.innerHTML = '<span id="signup-btn-text">Create account</span>';
+    }
+  } catch (err) {
+    showError('signup', 'Network error. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<span id="signup-btn-text">Create account</span>';
+  }
+}
+
+// ── Prevent multiple submissions ──────────────────────────────────────────
+
+document.getElementById('login-form').addEventListener('submit', (e) => {
+  if (document.getElementById('login-btn').disabled) e.preventDefault();
+});
+
+document.getElementById('signup-form').addEventListener('submit', (e) => {
+  if (document.getElementById('signup-btn').disabled) e.preventDefault();
+});
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

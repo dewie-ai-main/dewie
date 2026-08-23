@@ -1,0 +1,210 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dewie"
+version = "0.1.0"
+description = "Agent-native retrieval framework — enrich your documents, supercharge your agents"
+readme = "README.md"
+license = { text = "FSL-1.1-ALv2" }
+requires-python = ">=3.11,<3.15"
+authors = [{ name = "Dewie AI", email = "hello@dewie.ai" }]
+keywords = ["rag", "retrieval", "agents", "llm", "search", "knowledge-base"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "click>=8.0.0",
+    "questionary>=2.1.1",
+    # API framework
+    "fastapi>=0.138.1",
+    "mcp>=1.0.0,<2.0.0",  # mcp 2.0 dropped mcp.server.fastmcp (used by our MCP server)
+    "uvicorn[standard]>=0.32.0",
+    # Storage: PostgreSQL
+    "sqlalchemy[asyncio]>=2.0.51",
+    "asyncpg>=0.30.0",
+    "aiosqlite>=0.19.0",           # SQLite async dialect for SQLAlchemy (sqlite+aiosqlite:// DSNs)
+    "alembic>=1.14.0",
+    "psycopg2-binary>=2.9.12",    # alembic sync runner (migrations/env.py) needs a sync driver
+    # Storage: Redis cache
+    "redis[hiredis]>=5.2.0",
+    # Content ingestion
+    "feedparser>=6.0.12",
+    "httpx>=0.28.0",
+    "watchdog>=6.0.0",          # file system watcher for data/bodies/ auto-ingest
+    "langdetect>=1.0.9",        # pre-enrichment language gate — skip non-English docs
+    "trafilatura>=2.1.0",       # full-article extraction from RSS/web URLs
+    "markitdown>=0.1.6",        # HTML/PDF → markdown extraction (Reddit link posts)
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.3.0",
+    "bcrypt>=5.0.0",            # API key hashing (Issue #96)
+  "PyJWT[crypto]>=2.13.0",    # session JWT signing/verification
+    "cryptography>=42.0",       # Fernet encryption for server registry API keys at rest
+    # Config & validation
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "python-dotenv>=1.2.2",
+]
+
+[project.urls]
+Homepage = "https://dewie.ai"
+Documentation = "https://github.com/dewie-ai-main/dewie/tree/main/docs"
+Repository = "https://github.com/dewie-ai-main/dewie"
+"Bug Tracker" = "https://github.com/dewie-ai-main/dewie/issues"
+Changelog = "https://github.com/dewie-ai-main/dewie/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+nlp = [
+    "spacy>=3.8.14",
+]
+docs = [
+   "pdfplumber>=0.11.10",
+    "python-docx>=1.2.0",
+    "openpyxl>=3.1.5",
+    "python-pptx>=1.0.0",
+]
+podcast = [
+    "openai-whisper>=20231117",
+    "faster-whisper",
+]
+
+media = [
+    "youtube-transcript-api>=0.6.0",
+    "yt-dlp>=2026.6.9",
+    "openai-whisper>=20231117",
+]
+formats = [
+    "markitdown[all]>=0.1.6",
+]
+auth = [
+    "bcrypt>=5.0.0",
+    "PyJWT[crypto]>=2.13.0",
+]
+local = [
+    "sentence-transformers>=5.6.0",
+    "llama-cpp-python>=0.3.0",
+]
+all = [
+    "dewie[nlp,docs,media,auth,local,podcast]",
+]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",          # async test client
+    "fakeredis[aioredis]>=2.26.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+]
+
+[project.scripts]
+dewie = "dewie.cli:main"
+dewie-crawler = "dewie.crawler.cli:cli"
+dewie-mcp = "dewie.mcp_server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dewie"]
+
+# Ship the verification UI inside the wheel so `dewie serve` works from a
+# pip install, not just a source checkout. Resolved at runtime by dewie._static.
+[tool.hatch.build.targets.wheel.force-include]
+"static" = "dewie/static"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --cov=dewie --cov-report=term-missing --cov-fail-under=73 -m 'not integration and not production and not perf and not dev_remote_catalog and not dev_agent_harness and not dev_llamacpp_live'"
+markers = [
+    "perf: performance tests (slow, excluded from default runs)",
+    "integration: integration tests requiring live services",
+    "production: live integration tests against a running Dewie instance (requires DEWIE_PROD_URL)",
+    "dev_remote_catalog: optional dev-only tests for remote catalog flows",
+    "dev_agent_harness: optional dev-only tests for tool/endpoint harness flows",
+    "dev_llamacpp_live: optional live llama.cpp ingestion e2e tests",
+]
+
+[tool.coverage.run]
+source = ["src/dewie"]
+omit = [
+    "*/migrations/*",
+    "*/cli.py",
+    "*/debug.py",
+    # Infrastructure files requiring external services unavailable in unit tests
+    "*/mcp_server.py",              # requires `mcp` package (not installed in CI)
+    "*/ingestion/podcast.py",       # requires external podcast/audio API
+    "*/crawler/coordinator.py",     # live crawling infrastructure
+    "*/enrichment/backends/spacy.py", # optional NLP backend — requires spacy
+    "*/ingest/youtube.py",           # optional media backend — requires yt-dlp
+    "*/ingestion/base.py",
+    "*/ingestion/rss.py",
+    "*/ingestion/web.py",
+    "*/ingestion/extractors.py",
+    "*/crawler/fetcher.py",
+    "*/crawler/queue.py",
+    "*/crawler/schema.py",
+    "*/crawler/extractor.py",
+    "*/watcher.py",
+    "*/workers/enrichment.py",
+    "*/workers/chunk_embedder.py",
+    "*/workers/edge_rebuild.py",
+    "*/workers/ingest_poller.py",
+    "*/oauth.py",
+    "*/local_auth.py",
+    "*/setup_wizard.py",
+    "*/admin_main.py",
+    "*/config_file.py",
+    "*/llm_queue.py",
+    "*/providers/*",
+    "*/model_adapter.py",
+    "*/model_registry.py",
+    "*/storage/llm_cache.py",
+    "*/storage/system_health.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "pragma: no cover",
+]
+
+[tool.ruff]
+src = ["src"]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+    "E501",   # line too long — formatter handles what it can
+    "E402",   # module-level import not at top — intentional in init files
+    "B008",   # function call in default arg — FastAPI Depends() pattern
+    "SIM102", # nested if — sometimes clearer than single-line
+    "SIM103", # return condition directly — readability preference
+    "SIM105", # contextlib.suppress — explicit try/except preferred
+    "SIM108", # ternary operator — multi-line if/else often clearer
+    "SIM115", # context manager for open — not always applicable
+    "SIM117", # nested with — sometimes required for readability
+    "B005",   # misleading strip — acceptable in this codebase
+    "B007",   # loop var not used — intentional in some patterns
+    "B017",   # assert blind exception — test patterns
+    "B023",   # loop var binding — acceptable
+    "B027",   # empty abstract method — intentional stubs
+    "E741",   # ambiguous var name — acceptable in math/test contexts
+    "F841",   # local var assigned but unused — common in tests
+    "B905",   # zip without strict= — not required in this codebase
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"

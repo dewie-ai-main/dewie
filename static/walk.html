@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <title>Graph Walker — Dewie</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+      --border: var(--border); --purple: var(--purple);
+      --purple-lo: var(--purple-lo); --green: #22c55e;
+      --red: #ef4444; --yellow: #fbbf24;
+      --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+      --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    nav { position: relative; z-index: 100; background: rgba(7,7,15,0.9); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo-mark { width: 28px; height: 28px; background: var(--purple); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .nav-logo-mark svg { width: 15px; height: 15px; fill: #fff; }
+    .nav-logo-text { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; color: var(--text); }
+    .nav-logo-text span { color: var(--purple); }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    header { padding: 12px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; flex-shrink: 0; display: none; }
+    .header-right { margin-left: auto; display: flex; gap: 8px; }
+    .layout { display: grid; grid-template-columns: 250px 1fr 310px; height: calc(100vh - 52px); overflow: hidden; }
+
+    /* ── Left trail ── */
+    .trail-panel { border-right: 1px solid var(--border); overflow-y: auto; padding: 12px 10px; background: var(--bg); display: flex; flex-direction: column; }
+    .panel-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; flex-shrink: 0; }
+    .legend { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 11px; margin-bottom: 10px; flex-shrink: 0; }
+    .legend-row { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 5px; font-size: 11px; color: var(--dim); line-height: 1.4; }
+    .legend-row:last-child { margin-bottom: 0; }
+    .lbadge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+    .type-search { background: var(--purple-lo); color: var(--accent-light); }
+    .type-expand { background: rgba(251,191,36,0.08); color: var(--yellow); }
+    .type-read   { background: rgba(34,197,94,0.08); color: var(--green); }
+    .type-intersect { background: rgba(239,68,68,0.08); color: var(--red); }
+    .type-bridge { background: rgba(34,211,238,0.08); color: #67e8f9; }
+    .trail-list { flex: 1; }
+    .trail-item { padding: 7px 9px; border-radius: 6px; margin-bottom: 4px; border: 1px solid var(--border); cursor: pointer; }
+    .trail-item:hover { border-color: var(--border-hi); }
+    .trail-item.active { border-color: var(--purple); background: var(--purple-lo); }
+    .trail-type { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-bottom: 2px; }
+    .trail-title { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trail-note  { font-size: 10px; color: var(--dim); margin-top: 1px; }
+    .trail-empty { color: var(--xdim); font-size: 12px; text-align: center; padding: 20px 6px; }
+
+    /* ── Center ── */
+    .center-panel { overflow-y: auto; display: flex; flex-direction: column; }
+    .search-bar { padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; gap: 8px; }
+    .search-bar input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; padding: 9px 13px; }
+    .search-bar input:focus { outline: none; border-color: var(--purple); }
+    .btn { background: var(--purple); color: #fff; border: none; border-radius: 7px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .btn:hover { background: #4a4ae0; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-ghost { background: var(--bg2); color: var(--dim); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-pin { background: rgba(192,132,252,0.07); color: #c084fc; border: 1px solid rgba(192,132,252,0.2); }
+    .btn-pin:hover, .btn-pin.pinned { background: rgba(192,132,252,0.15); color: #e879f9; }
+    .btn-select { background: rgba(34,197,94,0.07); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .btn-select:hover, .btn-select.selected { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .btn-intersect { background: rgba(239,68,68,0.07); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .btn-intersect:hover { background: rgba(239,68,68,0.15); }
+    .btn-bridge { background: rgba(34,211,238,0.07); color: #67e8f9; border: 1px solid rgba(34,211,238,0.2); }
+    .btn-bridge:hover { background: rgba(34,211,238,0.15); }
+    .center-content { padding: 16px 18px; flex: 1; }
+    .section-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+
+    /* Doc card */
+    .doc-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+    .doc-card:hover { border-color: var(--border-hi); }
+    .doc-card.pinned-card { border-color: rgba(192,132,252,0.4); }
+    .doc-card.selected-card { border-color: rgba(34,197,94,0.4); }
+    .doc-row { display: flex; align-items: flex-start; gap: 10px; }
+    .doc-main { flex: 1; min-width: 0; }
+    .doc-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .doc-summary { font-size: 12px; color: var(--dim); line-height: 1.5; margin-bottom: 6px; }
+    .doc-chips { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 6px; }
+    .chip-kw  { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--purple-lo); color: var(--accent-light); border: 1px solid var(--border); }
+    .chip-ent { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: rgba(34,197,94,0.07); color: var(--green); }
+    .chip-over { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: rgba(239,68,68,0.07); color: var(--red); }
+    .weight-badge { font-size: 10px; color: var(--dim); padding: 1px 6px; background: var(--bg3); border-radius: 3px; }
+    .doc-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
+    .aq-toggle { font-size: 10px; color: var(--dim); cursor: pointer; margin-top: 3px; }
+    .aq-toggle:hover { color: var(--accent-light); }
+    .aq-section { margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px; display: none; }
+    .aq-section.open { display: block; }
+    .aq-q { font-size: 11px; color: var(--dim); padding: 3px 0; border-bottom: 1px solid var(--border); }
+
+    /* Bridge path */
+    .bridge-path { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; padding: 10px 12px; background: rgba(34,211,238,0.04); border: 1px solid rgba(34,211,238,0.2); border-radius: 7px; }
+    .bridge-node { font-size: 12px; color: #67e8f9; cursor: pointer; padding: 3px 8px; background: rgba(34,211,238,0.07); border-radius: 4px; }
+    .bridge-node:hover { color: #a5f3fc; }
+    .bridge-node.endpoint { color: #a5f3fc; background: rgba(34,211,238,0.12); font-weight: 600; }
+    .bridge-arrow { color: var(--xdim); font-size: 14px; }
+
+    /* Content reader */
+    .content-view { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .content-view h2 { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+    .content-body { font-size: 12px; color: var(--dim); line-height: 1.7; white-space: pre-wrap; max-height: 56vh; overflow-y: auto; background: var(--bg3); border-radius: 5px; padding: 12px; font-family: "SF Mono","Menlo",monospace; }
+
+    /* ── Right panel ── */
+    .context-panel { border-left: 1px solid var(--border); overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 0; }
+    .ctx-section { margin-bottom: 18px; }
+    .ctx-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .ctx-label-clear { color: var(--xdim); cursor: pointer; font-size: 10px; }
+    .ctx-label-clear:hover { color: var(--red); }
+
+    /* Pinned (working set) */
+    .pinned-item { background: rgba(192,132,252,0.05); border: 1px solid rgba(192,132,252,0.2); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; display: flex; gap: 7px; align-items: flex-start; }
+    .pinned-title { font-size: 12px; color: #c084fc; flex: 1; cursor: pointer; line-height: 1.4; }
+    .pinned-title:hover { color: #e879f9; }
+    .pinned-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .icon-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: var(--dim); padding: 1px 3px; border-radius: 3px; }
+    .icon-btn:hover { color: var(--text); background: var(--bg3); }
+
+    /* Selected (final results) */
+    .selected-item { background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; display: flex; gap: 7px; align-items: flex-start; }
+    .selected-num { font-size: 10px; color: var(--green); font-weight: 700; flex-shrink: 0; padding-top: 1px; }
+    .selected-title { font-size: 12px; color: #86efac; flex: 1; cursor: pointer; line-height: 1.4; }
+    .selected-title:hover { color: #bbf7d0; }
+
+    /* Graph ops */
+    .graph-ops { display: flex; flex-direction: column; gap: 6px; }
+    .graph-op-btn { width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; }
+    .graph-op-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .ctx-stat { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .ctx-stat-val { color: var(--accent-light); font-weight: 600; }
+    .empty { color: var(--xdim); font-size: 13px; text-align: center; padding: 36px 18px; line-height: 1.7; }
+    .placeholder-sm { color: var(--xdim); font-size: 11px; font-style: italic; }
+    .breadcrumb { font-size: 11px; color: var(--dim); margin-bottom: 10px; }
+    .crumb-link { color: var(--accent-light); cursor: pointer; }
+    .crumb-link:hover { color: var(--text); }
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Mobile layout ── */
+    .mobile-tabs { display: none; }
+    @media (max-width: 700px) {
+      body { overflow: auto; height: auto; min-height: 100vh; }
+      .layout { display: flex; flex-direction: column; height: auto; overflow: visible; }
+      .trail-panel, .context-panel { display: none; border: none; }
+      .trail-panel.mob-active, .context-panel.mob-active { display: flex; }
+      .center-panel { display: flex; min-height: 60vh; }
+      .center-panel.mob-hidden { display: none; }
+      .mobile-tabs { display: flex; position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); }
+      .mob-tab { flex: 1; padding: 10px 4px; font-size: 12px; font-weight: 600; text-align: center; color: var(--dim); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; }
+      .mob-tab.active { color: var(--accent-light); border-bottom-color: var(--purple); }
+      .search-bar { position: sticky; top: 41px; z-index: 9; background: var(--bg3); }
+    }
+  </style>
+<script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+    <div class="nav-right">
+      <button class="btn btn-ghost btn-sm" onclick="reset()">↺ Reset</button>
+    </div>
+  </div>
+</nav>
+
+  <div class="mobile-tabs">
+    <button class="mob-tab active" onclick="mobTab('search',this)">🔍 Search</button>
+    <button class="mob-tab" onclick="mobTab('trail',this)">🗺 History</button>
+    <button class="mob-tab" onclick="mobTab('context',this)">📌 Context</button>
+  </div>
+
+  <div class="layout">
+
+    <!-- Left: trail -->
+    <div class="trail-panel">
+      <div class="panel-label">Path history</div>
+      <div class="legend">
+        <div class="legend-row"><span class="lbadge type-search">search</span>Full-text + vector across all docs</div>
+        <div class="legend-row"><span class="lbadge type-expand">expand</span>Graph neighbors by edge weight</div>
+        <div class="legend-row"><span class="lbadge type-read">read</span>Raw document content</div>
+        <div class="legend-row"><span class="lbadge type-intersect">intersect</span>Docs shared by pinned set</div>
+        <div class="legend-row"><span class="lbadge type-bridge">bridge</span>Shortest path between 2 docs</div>
+      </div>
+      <div class="trail-list" id="trail"><div class="trail-empty">Nothing yet</div></div>
+    </div>
+
+    <!-- Center -->
+    <div class="center-panel">
+      <div class="search-bar">
+        <input id="searchInput" placeholder="Ask a question or enter keywords…">
+        <button class="btn" onclick="search()">Search</button>
+      </div>
+      <div class="center-content" id="centerContent">
+        <div class="empty">Search to start walking.<br>Every doc shows its metadata — keywords, entities, and the questions it answers.<br><br>📌 Pin interesting docs. ✓ Select the ones you're actually returning.</div>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div class="context-panel">
+
+      <!-- Selected (final results) -->
+      <div class="ctx-section">
+        <div class="ctx-label">
+          <span>✓ Selected <span id="selCount" style="color:#52b788"></span></span>
+          <span class="ctx-label-clear" onclick="clearSelected()">clear</span>
+        </div>
+        <div id="selectedList"><div class="placeholder-sm">Your final returned documents.</div></div>
+      </div>
+
+      <!-- Pinned (working set) -->
+      <div class="ctx-section">
+        <div class="ctx-label">
+          <span>📌 Pinned <span id="pinCount" style="color:#cc88cc"></span></span>
+          <span class="ctx-label-clear" onclick="clearPins()">clear</span>
+        </div>
+        <div id="pinnedList"><div class="placeholder-sm">Working set. Pin docs while exploring.</div></div>
+      </div>
+
+      <!-- Graph operations -->
+      <div class="ctx-section">
+        <div class="ctx-label">Graph operations</div>
+        <div class="graph-ops">
+          <button class="graph-op-btn btn-intersect" id="btnIntersect" onclick="runIntersection()" disabled>
+            🔴 Intersection — docs shared by all pinned
+          </button>
+          <button class="graph-op-btn btn-intersect" id="btnIntersectSoft" onclick="runIntersectionSoft()" disabled>
+            🟠 Near-intersection — shared by any 2+
+          </button>
+          <button class="graph-op-btn btn-bridge" id="btnBridge" onclick="runBridge()" disabled>
+            🔵 Bridge — shortest path between first 2 pinned
+          </button>
+        </div>
+        <div style="font-size:10px;color:#444;margin-top:7px;line-height:1.5">Intersection and bridge require 2+ pinned docs.</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="ctx-section">
+        <div class="ctx-label">Session</div>
+        <div class="ctx-stat"><span>Steps</span><span class="ctx-stat-val" id="statSteps">0</span></div>
+        <div class="ctx-stat"><span>Reads</span><span class="ctx-stat-val" id="statReads">0</span></div>
+        <div class="ctx-stat"><span>Searches</span><span class="ctx-stat-val" id="statSearches">0</span></div>
+        <div class="ctx-stat"><span>Expands</span><span class="ctx-stat-val" id="statExpands">0</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let trail = [], currentIdx = -1;
+    let pinned = new Map();   // docId → { title }
+    let selected = new Map(); // docId → { title }
+    let stats = { steps:0, reads:0, searches:0, expands:0 };
+
+    // ── Trail ──
+    function pushStep(type, docId, title, note) {
+      trail = trail.slice(0, currentIdx + 1);
+      trail.push({ type, docId, title, note });
+      currentIdx = trail.length - 1;
+      renderTrail();
+    }
+    function renderTrail() {
+      const el = document.getElementById('trail');
+      if (!trail.length) { el.innerHTML = '<div class="trail-empty">Nothing yet</div>'; return; }
+      el.innerHTML = trail.map((s,i) => `
+        <div class="trail-item${i===currentIdx?' active':''}" onclick="jumpTo(${i})">
+          <span class="trail-type type-${s.type}">${s.type}</span>
+          <div class="trail-title">${escHtml(s.title||'—')}</div>
+          <div class="trail-note">${escHtml(s.note||'')}</div>
+        </div>`).join('');
+    }
+    function jumpTo(idx) {
+      const s = trail[idx]; if (!s) return;
+      currentIdx = idx; renderTrail();
+      if (s.type==='search') replaySearch(s.title);
+      else if (s.type==='expand') replayExpand(s.docId, s.title);
+      else if (s.type==='read') replayRead(s.docId, s.title);
+    }
+
+    // ── Pin ──
+    function togglePin(docId, title) {
+      if (pinned.has(docId)) pinned.delete(docId);
+      else pinned.set(docId, { title });
+      syncDocState(docId);
+      renderPinned();
+      updateGraphOps();
+    }
+    function renderPinned() {
+      const el = document.getElementById('pinnedList');
+      document.getElementById('pinCount').textContent = pinned.size ? `(${pinned.size})` : '';
+      if (!pinned.size) { el.innerHTML = '<div class="placeholder-sm">Working set. Pin docs while exploring.</div>'; return; }
+      el.innerHTML = [...pinned.entries()].map(([id,p]) => `
+        <div class="pinned-item">
+          <div class="pinned-title" onclick="replayRead('${id}','${escAttr(p.title)}')">${escHtml(p.title)}</div>
+          <div class="pinned-actions">
+            <button class="icon-btn" title="Select as result" onclick="selectDoc('${id}','${escAttr(p.title)}')">✓</button>
+            <button class="icon-btn" title="Unpin" onclick="togglePin('${id}','${escAttr(p.title)}')">✕</button>
+          </div>
+        </div>`).join('');
+    }
+    function clearPins() {
+      const ids = [...pinned.keys()]; pinned.clear();
+      ids.forEach(id => syncDocState(id));
+      renderPinned(); updateGraphOps();
+    }
+
+    // ── Select ──
+    function selectDoc(docId, title) {
+      if (selected.has(docId)) { selected.delete(docId); }
+      else { selected.set(docId, { title }); }
+      syncDocState(docId);
+      renderSelected();
+    }
+    function renderSelected() {
+      const el = document.getElementById('selectedList');
+      document.getElementById('selCount').textContent = selected.size ? `(${selected.size})` : '';
+      if (!selected.size) { el.innerHTML = '<div class="placeholder-sm">Your final returned documents.</div>'; return; }
+      let i = 0;
+      el.innerHTML = [...selected.entries()].map(([id,p]) => {
+        i++;
+        return `<div class="selected-item">
+          <span class="selected-num">#${i}</span>
+          <div class="selected-title" onclick="replayRead('${id}','${escAttr(p.title)}')">${escHtml(p.title)}</div>
+          <button class="icon-btn" title="Deselect" onclick="selectDoc('${id}','${escAttr(p.title)}')">✕</button>
+        </div>`;
+      }).join('');
+    }
+    function clearSelected() {
+      const ids = [...selected.keys()]; selected.clear();
+      ids.forEach(id => syncDocState(id));
+      renderSelected();
+    }
+
+    // Sync button/card state for a doc
+    function syncDocState(docId) {
+      const isPinned = pinned.has(docId);
+      const isSel = selected.has(docId);
+      document.querySelectorAll(`[data-pin="${docId}"]`).forEach(b => {
+        b.textContent = isPinned ? '📌' : '📌 Pin';
+        b.classList.toggle('pinned', isPinned);
+      });
+      document.querySelectorAll(`[data-sel="${docId}"]`).forEach(b => {
+        b.textContent = isSel ? '✓' : '✓ Select';
+        b.classList.toggle('selected', isSel);
+      });
+      document.querySelectorAll(`[data-card="${docId}"]`).forEach(c => {
+        c.classList.toggle('pinned-card', isPinned && !isSel);
+        c.classList.toggle('selected-card', isSel);
+      });
+    }
+
+    function updateGraphOps() {
+      const ok = pinned.size >= 2;
+      document.getElementById('btnIntersect').disabled = !ok;
+      document.getElementById('btnIntersectSoft').disabled = !ok;
+      document.getElementById('btnBridge').disabled = !ok;
+    }
+
+    // ── Graph ops ──
+    async function runIntersection() {
+      const ids = [...pinned.keys()];
+      setCenter('<span class="spinner"></span> Finding intersection…');
+      pushStep('intersect', null, `Intersection (${ids.length} pinned)`, '');
+      stats.steps++; updateStats();
+      try {
+        const r = await fetch('/graph/intersection', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ doc_ids: ids, min_overlap: ids.length, limit: 30 }) });
+        const d = await r.json();
+        const docs = d.docs || [];
+        const s = trail[currentIdx]; if(s){s.note=`${docs.length} shared`;renderTrail();}
+        renderDocList(
+          `Intersection of ${ids.length} pinned docs — ${docs.length} shared neighbors`,
+          'These docs are adjacent to ALL your pinned docs. They bridge your concepts.',
+          docs.map(doc => ({ doc: { ...doc, id: doc.doc_id }, weight: doc.avg_weight, overlap: doc.overlap_count }))
+        );
+      } catch(e) { setCenter(`<div style="color:#e07070">${e.message}</div>`); }
+    }
+
+    async function runIntersectionSoft() {
+      const ids = [...pinned.keys()];
+      setCenter('<span class="spinner"></span> Finding near-intersection…');
+      pushStep('intersect', null, `Near-intersection (2+ overlap)`, '');
+      stats.steps++; updateStats();
+      try {
+        const r = await fetch('/graph/intersection', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ doc_ids: ids, min_overlap: 2, limit: 30 }) });
+        const d = await r.json();
+        const docs = d.docs || [];
+        const s = trail[currentIdx]; if(s){s.note=`${docs.length} docs`;renderTrail();}
+        renderDocList(
+          `Near-intersection — docs adjacent to 2+ of your ${ids.length} pinned`,
+          'Sorted by overlap count then avg edge weight.',
+          docs.map(doc => ({ doc: { ...doc, id: doc.doc_id }, weight: doc.avg_weight, overlap: doc.overlap_count }))
+        );
+      } catch(e) { setCenter(`<div style="color:#e07070">${e.message}</div>`); }
+    }
+
+    async function runBridge() {
+      const ids = [...pinned.keys()];
+      const [src, tgt] = ids;
+      const srcTitle = pinned.get(src)?.title || src.slice(0,8);
+      const tgtTitle = pinned.get(tgt)?.title || tgt.slice(0,8);
+      setCenter('<span class="spinner"></span> Finding bridge path…');
+      pushStep('bridge', null, `Bridge: ${srcTitle} → ${tgtTitle}`, '');
+      stats.steps++; updateStats();
+      try {
+        const r = await fetch('/graph/bridge', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ source_id: src, target_id: tgt, max_depth: 6 }) });
+        const d = await r.json();
+        const s = trail[currentIdx]; if(s){s.note=d.path?.length?`${d.hops} hops`:'no path';renderTrail();}
+        if (!d.path?.length) {
+          setCenter(`<div style="color:#888;padding:20px">No path found between these two docs within 6 hops. They may be in disconnected parts of the graph.</div>`);
+          return;
+        }
+        renderBridgePath(d.path, srcTitle, tgtTitle);
+      } catch(e) { setCenter(`<div style="color:#e07070">${e.message}</div>`); }
+    }
+
+    function renderBridgePath(path, srcTitle, tgtTitle) {
+      const chainHtml = path.map((node, i) => {
+        const isEnd = i === 0 || i === path.length - 1;
+        return `<span class="bridge-node${isEnd?' endpoint':''}" onclick="read('${node.id}','${escAttr(node.title)}')">${escHtml(node.title)}</span>${i < path.length-1 ? '<span class="bridge-arrow">→</span>' : ''}`;
+      }).join('');
+
+      const cardsHtml = path.map(node => docCard(node, null)).join('');
+
+      setCenter(`
+        <div class="breadcrumb">Bridge path: <strong>${escHtml(srcTitle)}</strong> → <strong>${escHtml(tgtTitle)}</strong> — ${path.length - 1} hops</div>
+        <div class="bridge-path">${chainHtml}</div>
+        <div class="section-label">Every document on the path — read any to explore further</div>
+        ${cardsHtml}`);
+    }
+
+    // ── Search ──
+    async function search() {
+      const q = document.getElementById('searchInput').value.trim(); if (!q) return;
+      setCenter('<span class="spinner"></span> Searching…');
+      stats.searches++; stats.steps++; pushStep('search', null, q, ''); updateStats();
+      try {
+        const r = await fetch('/query', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query: q, limit: 10 }) });
+        if (!r.ok) throw new Error(await r.text());
+        const d = await r.json(); const results = d.results||[];
+        const conf = d.result_confidence;
+        const s = trail[currentIdx]; if(s&&s.type==='search'){s.note=`${results.length} results`;renderTrail();}
+        const gapHtml = conf?.gap_signal
+          ? `<div style="font-size:12px;color:#e07070;padding:9px 13px;background:#1a0808;border:1px solid #4a1a1a;border-radius:6px;margin-bottom:10px;line-height:1.5">⚠ ${escHtml(conf.gap_signal)}</div>`
+          : '';
+        const subhead = gapHtml || '📌 Pin interesting ones · ✓ Select final results · Expand to follow the graph';
+        renderDocList(`Search: "<strong>${escHtml(q)}</strong>" — ${results.length} docs`, subhead, results.map(r=>({doc:{...r,id:r.doc_id},weight:r.score})));
+      } catch(e) { setCenter(`<div style="color:#e07070">${e.message}</div>`); }
+    }
+    async function replaySearch(q) {
+      setCenter('<span class="spinner"></span> Loading…');
+      try {
+        const r = await fetch('/query', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query: q, limit: 10 }) });
+        const d = await r.json();
+        renderDocList(`Search: "<strong>${escHtml(q)}</strong>"`, '', (d.results||[]).map(r=>({doc:{...r,id:r.doc_id},weight:r.score})));
+      } catch(e) {}
+    }
+
+    // ── Expand ──
+    async function expand(docId, title) {
+      setCenter('<span class="spinner"></span> Loading neighbors…');
+      stats.expands++; stats.steps++; pushStep('expand', docId, title, ''); updateStats();
+      try { await doExpand(docId, title); } catch(e) { setCenter(`<div style="color:#e07070">${e.message}</div>`); }
+    }
+    async function replayExpand(docId, title) {
+      setCenter('<span class="spinner"></span> Loading…');
+      try { await doExpand(docId, title); } catch(e) {}
+    }
+    async function doExpand(docId, title) {
+      const r = await fetch(`/graph/neighbors/${docId}?limit=20`);
+      if (!r.ok) throw new Error(await r.text());
+      const neighbors = await r.json();
+      const s = trail[currentIdx]; if(s&&s.type==='expand'){s.note=`${neighbors.length} neighbors`;renderTrail();}
+      renderDocList(
+        `Expanded: "<span class="crumb-link" onclick="read('${docId}','${escAttr(title)}')">${escHtml(title)}</span>" — ${neighbors.length} neighbors`,
+        'Sorted by edge weight (keyword overlap). Stronger = more shared concepts.',
+        neighbors.map(n => ({ doc: { id: n.doc_id, title: n.title, summary: n.summary, keywords: n.keywords||[], entities: n.entities||[], answers_questions: n.answers_questions||[] }, weight: n.weight }))
+      );
+    }
+
+    // ── Read ──
+    async function read(docId, title) {
+      setCenter('<span class="spinner"></span> Reading…');
+      stats.reads++; stats.steps++; pushStep('read', docId, title, ''); updateStats();
+      try { await doRead(docId, title); } catch(e) { setCenter(`<div style="color:#e07070">${e.message}</div>`); }
+    }
+    async function replayRead(docId, title) {
+      setCenter('<span class="spinner"></span> Loading…');
+      try { await doRead(docId, title); } catch(e) {}
+    }
+    async function doRead(docId, title) {
+      const [cR, mR] = await Promise.all([fetch(`/documents/${docId}/content`), fetch(`/documents/${docId}`)]);
+      const content = cR.ok ? await cR.text() : '[No content]';
+      const meta = mR.ok ? await mR.json() : null;
+      let body = content;
+      if (body.startsWith('---')) { const end = body.indexOf('---',3); if(end>0) body=body.slice(end+3).trim(); }
+      const s = trail[currentIdx]; if(s&&s.type==='read'){s.note=`${body.length.toLocaleString()} chars`;renderTrail();}
+      const isPinned = pinned.has(docId), isSel = selected.has(docId);
+      setCenter(`
+        <div class="breadcrumb">Reading: "<strong>${escHtml(title)}</strong>"</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="expand('${docId}','${escAttr(title)}')">Expand →</button>
+          <button class="btn btn-pin btn-sm${isPinned?' pinned':''}" data-pin="${docId}" onclick="togglePin('${docId}','${escAttr(title)}')">${isPinned?'📌 Pinned':'📌 Pin'}</button>
+          <button class="btn btn-select btn-sm${isSel?' selected':''}" data-sel="${docId}" onclick="selectDoc('${docId}','${escAttr(title)}')">${isSel?'✓ Selected':'✓ Select'}</button>
+        </div>
+        ${meta ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:10px">${(meta.keywords||[]).slice(0,6).map(k=>`<span class="chip-kw">${escHtml(k)}</span>`).join('')}${(meta.entities||[]).slice(0,4).map(e=>`<span class="chip-ent">${escHtml(e)}</span>`).join('')}</div>` : ''}
+        <div class="content-view">
+          <h2>${escHtml(title)}</h2>
+          ${meta?.summary?`<div style="font-size:12px;color:#666;margin-bottom:10px">${escHtml(meta.summary)}</div>`:''}
+          <div class="content-body">${escHtml(body)}</div>
+        </div>`);
+    }
+
+    // ── Render doc list ──
+    function renderDocList(heading, subheading, items) {
+      setCenter(`<div class="breadcrumb">${heading}</div>${subheading?`<div class="section-label">${subheading}</div>`:''}${items.map(({doc,weight,overlap})=>docCard(doc,weight,overlap)).join('')}`);
+    }
+
+    function docCard(doc, weight, overlap) {
+      const kw = (doc.keywords||[]).slice(0,5), ent = (doc.entities||[]).slice(0,3), aq = doc.answers_questions||[];
+      const sa = escAttr(doc.title||'');
+      const aqId = 'aq_'+doc.id?.replace(/-/g,'');
+      const isPinned = pinned.has(doc.id), isSel = selected.has(doc.id);
+      return `<div class="doc-card${isSel?' selected-card':isPinned?' pinned-card':''}" data-card="${doc.id}">
+        <div class="doc-row">
+          <div class="doc-main">
+            <div class="doc-title">${escHtml(doc.title||'Untitled')}${weight!=null?` <span class="weight-badge">${weight.toFixed(3)}</span>`:''}${overlap!=null?` <span class="chip-over">${overlap} overlaps</span>`:''}</div>
+            <div class="doc-summary">${escHtml((doc.summary||'').slice(0,180))}</div>
+            ${(kw.length||ent.length)?`<div class="doc-chips">${kw.map(k=>`<span class="chip-kw">${escHtml(k)}</span>`).join('')}${ent.map(e=>`<span class="chip-ent">${escHtml(e)}</span>`).join('')}</div>`:''}
+            ${aq.length?`<div class="aq-toggle" onclick="toggleAQ('${aqId}',this)">▸ ${aq.length} questions this doc answers</div><div class="aq-section" id="${aqId}">${aq.slice(0,8).map(q=>`<div class="aq-q">${escHtml(q)}</div>`).join('')}</div>`:''}
+          </div>
+          <div class="doc-actions">
+            <button class="btn btn-select btn-sm${isSel?' selected':''}" data-sel="${doc.id}" onclick="selectDoc('${doc.id}','${sa}')">${isSel?'✓':'✓ Select'}</button>
+            <button class="btn btn-pin btn-sm${isPinned?' pinned':''}" data-pin="${doc.id}" onclick="togglePin('${doc.id}','${sa}')">${isPinned?'📌':'📌 Pin'}</button>
+            <button class="btn btn-ghost btn-sm" onclick="expand('${doc.id}','${sa}')">Expand</button>
+            <button class="btn btn-ghost btn-sm" onclick="read('${doc.id}','${sa}')">Read</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function toggleAQ(id, btn) {
+      const el = document.getElementById(id); const open = el.classList.toggle('open');
+      btn.textContent = btn.textContent.replace(open?'▸':'▾', open?'▾':'▸');
+    }
+
+    function reset() {
+      trail=[]; currentIdx=-1; pinned.clear(); selected.clear();
+      stats={steps:0,reads:0,searches:0,expands:0};
+      renderTrail(); renderPinned(); renderSelected(); updateStats(); updateGraphOps();
+      setCenter('<div class="empty">Search to start walking.<br>📌 Pin interesting docs · ✓ Select the ones you\'re returning.</div>');
+    }
+    function updateStats() {
+      document.getElementById('statSteps').textContent = stats.steps;
+      document.getElementById('statReads').textContent = stats.reads;
+      document.getElementById('statSearches').textContent = stats.searches;
+      document.getElementById('statExpands').textContent = stats.expands;
+    }
+    function setCenter(html) { document.getElementById('centerContent').innerHTML = html; }
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escAttr(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+    document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') search(); });
+
+    function mobTab(tab, btn) {
+      document.querySelectorAll('.mob-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const trail = document.querySelector('.trail-panel');
+      const center = document.querySelector('.center-panel');
+      const ctx = document.querySelector('.context-panel');
+      trail.classList.remove('mob-active');
+      center.classList.remove('mob-hidden');
+      ctx.classList.remove('mob-active');
+      if (tab === 'trail') { trail.classList.add('mob-active'); center.classList.add('mob-hidden'); }
+      else if (tab === 'context') { ctx.classList.add('mob-active'); center.classList.add('mob-hidden'); }
+      else { /* search/center — already visible */ }
+    }
+  </script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

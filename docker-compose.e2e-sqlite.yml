@@ -1,0 +1,36 @@
+# docker-compose.e2e-sqlite.yml — containerized e2e stack, SQLite backend
+#
+# Usage:
+#   docker compose -f docker-compose.e2e-sqlite.yml up -d --build --wait
+#   scripts/smoke_compose.sh 8765
+#   docker compose -f docker-compose.e2e-sqlite.yml down -v
+
+services:
+  dewie-sqlite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dewie-e2e-sqlite
+    command: ["python", "-m", "dewie.cli", "serve"]
+    environment:
+      POSTGRES_DSN: sqlite+aiosqlite:////app/data/dewie-e2e.db
+      AUTH_ENABLED: "false"
+      ENABLE_ENRICHMENT: "true"
+      ENRICHMENT_DEFAULT_BACKEND: passthrough
+      ENRICHMENT_SLEEP_SECS: "1"
+      ENABLE_INGESTION: "false"
+      ENABLE_POLLER: "false"
+      DEWIE_DATA_DIR: /app/data
+      LOG_LEVEL: info
+    ports:
+      - "${E2E_PORT:-8765}:10946"
+    volumes:
+      - sqlite-e2e-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10946/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+volumes:
+  sqlite-e2e-data:

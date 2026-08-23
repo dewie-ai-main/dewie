@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ingestion Status</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1117; color: #e6edf3; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+    nav { background: #161b22; border-bottom: 1px solid #21262d; padding: 12px 24px; display: flex; align-items: center; gap: 12px; }
+    nav .logo { color: #58a6ff; font-weight: 700; font-size: 16px; letter-spacing: 0.05em; }
+    nav .sub { color: #8b949e; font-size: 12px; }
+    nav .refresh { margin-left: auto; background: none; border: 1px solid #30363d; color: #8b949e; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    nav .refresh:hover { color: #e6edf3; border-color: #58a6ff; }
+    .last-updated { margin-left: 8px; font-size: 11px; color: #484f58; }
+    main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #8b949e; margin-bottom: 12px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .kpi { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; }
+    .kpi .val { font-size: 28px; font-weight: 700; line-height: 1; }
+    .kpi .lbl { font-size: 11px; color: #8b949e; margin-top: 6px; }
+    .kpi.green .val { color: #3fb950; }
+    .kpi.blue .val { color: #58a6ff; }
+    .kpi.yellow .val { color: #d29922; }
+    .kpi.purple .val { color: #bc8cff; }
+    .kpi.orange .val { color: #ffa657; }
+    .kpi.gray .val { color: #8b949e; }
+    .section { margin-bottom: 32px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .panel { background: #161b22; border: 1px solid #21262d; border-radius: 8px; overflow: hidden; }
+    .panel-head { padding: 10px 16px; background: #1c2128; border-bottom: 1px solid #21262d; font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; }
+    .source-list { max-height: 400px; overflow-y: auto; }
+    .source-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid #161b22; }
+    .source-row:hover { background: #1c2128; }
+    .source-name { color: #58a6ff; }
+    .source-bar { flex: 1; margin: 0 12px; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
+    .source-bar-fill { height: 100%; background: #58a6ff; border-radius: 3px; transition: width 0.4s; }
+    .source-count { color: #8b949e; min-width: 40px; text-align: right; }
+    .recent-list { max-height: 400px; overflow-y: auto; }
+    .recent-row { padding: 8px 16px; border-bottom: 1px solid #161b22; }
+    .recent-row:hover { background: #1c2128; }
+    .recent-title { color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .recent-meta { display: flex; gap: 8px; margin-top: 3px; }
+    .badge { display: inline-block; padding: 1px 8px; border-radius: 12px; font-size: 10px; }
+    .badge-source { background: #1c2d4a; color: #58a6ff; }
+    .badge-time { color: #484f58; font-size: 10px; }
+    .progress-section { margin-bottom: 32px; }
+    .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .progress-label { width: 140px; color: #8b949e; }
+    .progress-bar { flex: 1; height: 8px; background: #21262d; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s; }
+    .fill-green { background: #3fb950; }
+    .fill-blue { background: #58a6ff; }
+    .fill-purple { background: #bc8cff; }
+    .progress-num { width: 80px; text-align: right; color: #8b949e; }
+    .pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  </style>
+</head>
+<body>
+<nav>
+  <span class="logo">Dewie</span>
+  <span class="sub">ingestion status</span>
+  <span class="last-updated" id="last-updated">—</span>
+  <button class="refresh" onclick="load()">↻ Refresh</button>
+</nav>
+<main>
+
+  <!-- Enrichment Worker Control -->
+  <div id="worker-control-bar" style="display:flex;align-items:center;gap:16px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 20px;margin-bottom:20px;">
+    <span style="font-weight:600;color:#e6edf3;">Enrichment Workers</span>
+    <span id="worker-status-badge" style="padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">—</span>
+    <span id="worker-count-label" style="color:#8b949e;font-size:13px;"></span>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button id="btn-pause" onclick="pauseWorkers()"
+        style="padding:6px 18px;border-radius:6px;border:none;cursor:pointer;font-weight:600;background:#da3633;color:#fff;">
+        ⏸ Pause
+      </button>
+      <button id="btn-resume" onclick="resumeWorkers()"
+        style="padding:6px 18px;border-radius:6px;border:none;cursor:pointer;font-weight:600;background:#238636;color:#fff;">
+        ▶ Resume
+      </button>
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpis">
+    <div class="kpi gray"><div class="val pulse">—</div><div class="lbl">Total Docs</div></div>
+    <div class="kpi gray"><div class="val pulse">—</div><div class="lbl">Total Edges</div></div>
+    <div class="kpi gray"><div class="val pulse">—</div><div class="lbl">Sources</div></div>
+    <div class="kpi gray"><div class="val pulse">—</div><div class="lbl">Added (10 min)</div></div>
+    <div class="kpi gray"><div class="val pulse">—</div><div class="lbl">Added (1 hr)</div></div>
+    <div class="kpi gray"><div class="val pulse">—</div><div class="lbl">Added (24 hr)</div></div>
+  </div>
+
+  <!-- Ingestion tools -->
+  <div class="section">
+    <h2>Ingestion by Tool</h2>
+    <div id="tool-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;"></div>
+    <div id="tool-errors" style="display:none;">
+      <div class="panel-head" style="margin-bottom:8px;">Active Errors by Tool</div>
+      <div id="tool-error-table" style="background:#161b22;border:1px solid #21262d;border-radius:8px;overflow:hidden;"></div>
+    </div>
+  </div>
+
+  <div class="section progress-section">
+    <h2>Enrichment Pipeline Coverage</h2>
+    <div id="pipeline-bars"></div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head">Documents by Source</div>
+      <div class="source-list" id="source-list"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Recently Ingested</div>
+      <div class="recent-list" id="recent-list"></div>
+    </div>
+  </div>
+
+</main>
+<script src="/ui/ingest-status.js"></script>
+</body>
+</html>

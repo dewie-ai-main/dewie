@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <script>
+  /* AUTO-REDIRECT-GUARD: early check to force login if unauthenticated */
+  (async function(){
+    try{
+      const res = await fetch(window._pfx + '/api/auth/me', {credentials: 'include'});
+      if(!res.ok){
+        const redirect = window._pfx + '/ui/login.html?redirect=' + encodeURIComponent(location.pathname);
+        if(location.pathname !== window._pfx + '/ui/login.html') location.replace(redirect);
+      }
+    }catch(e){
+      console && console.error && console.error('auth guard error', e);
+    }
+  })();
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dewie — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+      --border: var(--border); --purple: var(--purple);
+      --purple-lo: var(--purple-lo); --green: #22c55e;
+      --red: #ef4444; --yellow: #f59e0b;
+      --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+      --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
+    }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(7,7,15,0.9); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nav-logo-text { font-family: var(--mono); font-size: 1rem; color: var(--text); }
+    .nav-badge { font-size: 0.68rem; font-family: var(--mono); color: var(--accent-light); background: var(--purple-lo); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; }
+    .nav-right { display: flex; align-items: center; gap: 16px; font-size: 0.8rem; }
+    .nav-link { color: var(--dim); text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .nav-env { font-family: var(--mono); font-size: 0.72rem; color: var(--dim); }
+
+    /* LAYOUT */
+    .shell { position: relative; z-index: 1; display: flex; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* SIDEBAR */
+    .sidebar { width: 180px; flex-shrink: 0; padding: 28px 0; }
+    .tab-section-label { font-size: 0.65rem; font-family: var(--mono); color: var(--xdim); letter-spacing: 0.1em; text-transform: uppercase; padding: 14px 12px 5px; }
+    .tab-btn { display: block; width: 100%; text-align: left; background: none; border: none; padding: 8px 12px; border-radius: 7px; font-size: 0.84rem; color: var(--dim); cursor: pointer; font-family: var(--sans); margin-bottom: 2px; transition: all 0.15s; text-decoration: none; }
+    .tab-btn:hover { background: var(--purple-lo); color: var(--text); }
+    .tab-btn.active { background: var(--purple-lo); color: var(--accent-light); border: 1px solid var(--border); }
+
+    /* MAIN */
+    .main-panel { flex: 1; min-width: 0; padding: 28px 0 28px 28px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .panel-sub { font-size: 0.82rem; color: var(--dim); margin-bottom: 24px; }
+
+    /* CARDS */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+    .card-title { font-size: 0.72rem; font-family: var(--mono); color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .stat-box-num { font-family: var(--mono); font-size: 1.5rem; font-weight: 500; }
+    .stat-box-label { font-size: 0.72rem; color: var(--dim); margin-top: 4px; }
+    .stat-box.warn .stat-box-num { color: var(--yellow); }
+    .stat-box.ok .stat-box-num { color: var(--green); }
+    .stat-box.err .stat-box-num { color: var(--red); }
+
+    /* TABLE */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .tbl-wrap { overflow-x: auto; width: 100%; }
+    .tbl th { text-align: left; font-size: 0.68rem; font-family: var(--mono); color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .tbl td { padding: 10px 12px; border-bottom: 1px solid var(--purple-lo); vertical-align: middle; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: var(--grid-color); }
+
+    /* BADGES */
+    .badge { display: inline-block; font-size: 0.68rem; font-family: var(--mono); padding: 2px 8px; border-radius: 100px; }
+    .badge-ok { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .badge-warn { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
+    .badge-err { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+    .badge-dim { background: rgba(100,116,139,0.15); color: var(--dim); border: 1px solid var(--border); }
+    .badge-purple { background: var(--purple-lo); color: var(--accent-light); border: 1px solid var(--border); }
+
+    /* BUTTONS */
+    .btn { font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-family: var(--sans); font-weight: 500; border: none; transition: all 0.15s; }
+    .btn-primary { background: var(--purple); color: #fff; border: 1px solid var(--purple); }
+    .btn-primary:hover { background: var(--purple-dark); }
+    .btn-copy { background: var(--purple-lo); color: var(--accent-light); border: 1px solid var(--border); }
+    .btn-copy:hover { background: var(--border); }
+    .btn-danger { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .btn-danger-outline { background: transparent; color: #f87171; border: 1px solid rgba(239,68,68,0.3); font-size:0.72rem; }
+    .btn-danger-outline:hover { background: rgba(239,68,68,0.15); }
+
+    /* FORM */
+    .form-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+    .form-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.85rem; font-family: var(--sans); outline: none; }
+    .form-input:focus { border-color: var(--purple); }
+    .form-input::placeholder { color: var(--xdim); }
+    .form-select { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.85rem; font-family: var(--sans); outline: none; cursor: pointer; }
+    .form-select:focus { border-color: var(--purple); }
+
+    /* ERROR ROWS */
+    .error-row { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 0.8rem; }
+    .error-row-msg { color: #fca5a5; margin-bottom: 2px; }
+    .error-row-meta { font-family: var(--mono); font-size: 0.7rem; color: var(--dim); }
+
+    /* TOOL LINKS */
+    .tool-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .tool-link { display: flex; align-items: center; justify-content: space-between; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; text-decoration: none; color: var(--text); font-size: 0.84rem; transition: border-color 0.15s; }
+    .tool-link:hover { border-color: var(--border-hi); background: var(--purple-lo); }
+    .tool-link-arrow { color: var(--dim); font-size: 0.75rem; }
+
+    /* SPINNER */
+    .test-spinner { display:inline-block; width:13px; height:13px; border:2px solid var(--border); border-top-color:var(--purple); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:5px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* MISC */
+    .empty { text-align: center; padding: 32px; color: var(--dim); font-size: 0.85rem; }
+    .tbl-wrap { overflow-x: auto; }
+    .msg-ok { color: var(--green); font-size: 0.8rem; margin-top: 8px; }
+    .msg-err { color: #f87171; font-size: 0.8rem; margin-top: 8px; }
+    .loading-row { color: var(--dim); font-size: 0.82rem; padding: 12px 0; }
+
+    /* STATUS INDICATORS */
+    .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.ok       { background: #22c55e; box-shadow: 0 0 6px #22c55e99; animation: pulse-ok 2.5s infinite; }
+    .status-dot.degraded { background: #f59e0b; box-shadow: 0 0 6px #f59e0b99; animation: pulse-warn 1.8s infinite; }
+    .status-dot.error    { background: #ef4444; box-shadow: 0 0 6px #ef444499; animation: pulse-err 1.2s infinite; }
+    .status-dot.loading  { background: #64748b; }
+    @keyframes pulse-ok   { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    @keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes pulse-err  { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .svc-card { background: var(--bg3,#12121f); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .svc-card.ok       { border-color: #166534; }
+    .svc-card.degraded { border-color: #92400e; }
+    .svc-card.error    { border-color: #991b1b; }
+    .svc-name  { font-size: 0.68rem; font-family: var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    .svc-state { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: 600; }
+    .svc-msg   { font-size: 0.75rem; color: var(--dim); }
+    .mono { font-family: var(--mono); font-size: 0.78rem; }
+    .dim { color: var(--dim); }
+    .section-gap { margin-top: 20px; }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:24px; width:90%; max-width:560px; max-height:90vh; overflow-y:auto; }
+    .modal-title { font-size:1rem; font-weight:600; margin-bottom:4px; }
+    .modal-sub { font-size:0.82rem; color:var(--dim); margin-bottom:20px; }
+    .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+    .modal-field { margin-bottom:14px; }
+    .modal-field label { display:block; font-size:0.72rem; font-family:var(--mono); color:var(--dim); margin-bottom:5px; }
+    .modal-field .inp { width:100%; }
+    .modal-field .field-row { display:flex; gap:10px; }
+    .modal-field .field-row > * { flex:1; }
+  </style>
+  <script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="/ui/admin.html" class="nav-logo">
+        <span class="nav-logo-text">dewie</span>
+      </a>
+      <span class="nav-badge">admin</span>
+      <span class="nav-env" id="nav-env"></span>
+    </div>
+    <div class="nav-right">
+      <a href="/ui/app.html" class="nav-link">← App</a>
+      <button class="btn btn-danger" style="padding:4px 12px;font-size:0.75rem" onclick="restartServer()">Restart</button>
+    </div>
+  </div>
+</nav>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="tab-section-label">Overview</div>
+    <button class="tab-btn active" data-tab="overview" onclick="showTab(this)">Dashboard</button>
+
+    <div class="tab-section-label">System</div>
+    <button class="tab-btn" data-tab="status" onclick="showTab(this)">Status</button>
+    <button class="tab-btn" data-tab="pipeline" onclick="showTab(this)">Pipeline</button>
+    <button class="tab-btn" data-tab="queries" onclick="showTab(this)">Queries</button>
+    <button class="tab-btn" data-tab="users" onclick="showTab(this)">Users</button>
+    <button class="tab-btn" data-tab="providers" onclick="showTab(this)">Model Providers</button>
+    <button class="tab-btn" data-tab="config" onclick="showTab(this)">Config</button>
+
+    <div class="tab-section-label">Data</div>
+    <button class="tab-btn" data-tab="scopes" onclick="showTab(this)">Access Controls</button>
+    <button class="tab-btn" data-tab="corpus" onclick="showTab(this)">Corpus</button>
+    <button class="tab-btn" data-tab="feeds" onclick="showTab(this)">Feeds</button>
+    <button class="tab-btn" data-tab="catalogs" onclick="showTab(this);loadCatalogs()">Catalogs</button>
+    <button class="tab-btn" data-tab="benchmarks" onclick="showTab(this)">Benchmarks</button>
+
+    <div class="tab-section-label">Testing</div>
+    <button class="tab-btn" data-tab="testing" onclick="showTab(this)">E2E Tests</button>
+
+    <div class="tab-section-label">Tools</div>
+    <a href="/ui/query-inspector.html" class="tab-btn nav-link" style="display:block">Query inspector ↗</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-panel">
+
+    <!-- OVERVIEW -->
+    <div class="panel active" id="panel-overview">
+      <div class="panel-title">Dashboard</div>
+      <div class="panel-sub">Corpus health, pipeline state, and recent activity.</div>
+
+      <div id="overview-stats"><div class="loading-row">Loading…</div></div>
+
+      <div class="card section-gap">
+        <div class="card-title">Pipeline status</div>
+        <div id="overview-pipeline"><div class="loading-row">Loading…</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent queries</div>
+        <div id="overview-queries"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="panel" id="panel-status">
+      <div class="panel-title">Service Status</div>
+      <div class="panel-sub">Live health indicators — auto-refreshes every 30 seconds.</div>
+
+      <div class="card" id="status-overall-card">
+        <div class="card-title">Overall</div>
+        <div id="status-overall" style="display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:600">
+          <span class="status-dot loading" id="status-overall-dot"></span>
+          <span id="status-overall-text">Checking…</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Services</div>
+        <div id="status-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+          <div class="loading-row">Loading…</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+        <span id="status-checked-at" style="font-size:0.75rem;color:var(--dim)"></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="status-countdown" style="font-size:0.75rem;color:var(--dim);display:none">Next refresh in <span id="status-countdown-sec">30</span>s</span>
+          <button class="btn btn-copy" onclick="loadServiceStatus()">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="status-error" style="color:#f87171;font-size:0.82rem;margin-top:8px;display:none"></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="panel" id="panel-pipeline">
+      <div class="panel-title">Pipeline</div>
+      <div class="panel-sub">Enrichment health, error rates, and worker status.</div>
+
+      <div id="pipeline-stats-full"><div class="loading-row">Loading…</div></div>
+
+      <div class="card section-gap">
+        <div class="card-title">Recent errors</div>
+        <div id="pipeline-errors"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- QUERIES -->
+    <div class="panel" id="panel-queries">
+      <div class="panel-title">Query Log</div>
+      <div class="panel-sub">All queries, latency, hop count, and source. Click to inspect.</div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
+        <a href="/ui/query-inspector.html" class="btn btn-primary" style="text-decoration:none">Open Query Inspector ↗</a>
+        <button class="btn btn-copy" onclick="loadQueryLog()">Refresh</button>
+        <select class="form-select" id="query-limit" onchange="loadQueryLog()" style="flex:none;width:auto">
+          <option value="30">Last 30</option>
+          <option value="100">Last 100</option>
+          <option value="500">Last 500</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="queries-list"><div class="loading-row" style="padding:20px">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="panel" id="panel-users">
+      <div class="panel-title">Users</div>
+      <div class="panel-sub">Manage local users, roles, activation status, and passwords.</div>
+
+      <div class="card">
+        <div class="card-title">Add User</div>
+        <div class="form-row" style="flex-wrap:wrap;gap:8px">
+          <input class="form-input" id="new-user-email" type="text" placeholder="Username or email" style="min-width:200px" />
+          <input class="form-input" id="new-user-name" type="text" placeholder="Display name (optional)" style="min-width:160px" />
+          <input class="form-input" id="new-user-password" type="password" placeholder="Password (min 8 chars)" style="min-width:160px" />
+          <select class="form-select" id="new-user-admin">
+            <option value="false">user</option>
+            <option value="true">admin</option>
+          </select>
+          <button class="btn btn-primary" onclick="createUser()">Add User</button>
+        </div>
+        <div id="new-user-msg" style="margin-top:6px"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+          <button class="btn btn-copy" onclick="loadUsers()">Refresh</button>
+        </div>
+        <div id="users-list" style="overflow-x:auto"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- MODEL PROVIDERS -->
+    <div class="panel" id="panel-providers">
+      <div class="panel-title">Model Providers</div>
+      <div class="panel-sub">Register a server endpoint once — it doubles as a provider for model discovery and curation, used by label everywhere (AQ/KE/embedding config).</div>
+
+      <div class="card" id="prov-panel-servers">
+        <div class="card-title">Servers</div>
+        <div class="panel-sub" style="margin:0 0 8px">A server is a label + wire format + endpoint. Registering one makes its models available below — discovered automatically for openai-format servers, or add them manually.</div>
+        <table class="tbl" id="prov-servers-table" style="margin-bottom:10px"><thead><tr>
+          <th>Label</th><th>Format</th><th>Endpoint</th><th>API key env</th><th>Key set</th><th>Availability</th><th>Actions</th>
+        </tr></thead><tbody></tbody></table>
+        <div class="form-row" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:140px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Label</div>
+            <input class="form-input" id="prov-server-label" placeholder="llamacpp" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:120px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Format</div>
+            <select class="form-select" id="prov-server-format">
+              <option value="openai">openai</option>
+              <option value="anthropic">anthropic</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:220px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Endpoint (with or without /v1)</div>
+            <input class="form-input" id="prov-server-endpoint" placeholder="http://localhost:8080/v1" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:160px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">API key env var (optional)</div>
+            <input class="form-input" id="prov-server-keyenv" placeholder="e.g. OPENAI_API_KEY" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:160px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">API key (optional, stored encrypted)</div>
+            <input class="form-input" id="prov-server-apikey" type="password" placeholder="sk-..." />
+          </div>
+          <button class="btn btn-primary" onclick="upsertServer()">Add / Update</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:10px">
+          <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Extra body params (optional JSON — merged into every LLM request, e.g. <code>{"thinking_budget_tokens": 0}</code>)</div>
+          <textarea class="form-input" id="prov-server-extrabody" rows="2" style="font-family:var(--mono);font-size:0.8rem" placeholder='{"thinking_budget_tokens": 0}'></textarea>
+        </div>
+        <div id="prov-server-msg" style="margin-top:6px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Manual model entry</div>
+        <div class="panel-sub" style="margin:0 0 8px">For servers that don't support discovery (e.g. anthropic format), or to add a model that wasn't auto-discovered.</div>
+        <div class="form-row">
+          <select class="form-select" id="prov-model-provider" style="min-width:220px"></select>
+          <input class="form-input" id="prov-model-id" placeholder="Model id (e.g. gpt-4o-mini)" />
+          <input class="form-input" id="prov-model-name" placeholder="Display name (optional)" />
+          <button class="btn btn-primary" onclick="addManualModel()">Add Model</button>
+        </div>
+        <div id="prov-model-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Models <span class="badge badge-dim" style="margin-left:6px">turn on/off per server</span></div>
+        <div id="prov-model-list"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="panel" id="panel-config">
+      <div class="panel-title">Config</div>
+      <div class="panel-sub">Runtime configuration. Changes to <span class="mono" style="color:var(--accent-light)">restart_required</span> keys take effect after restart.</div>
+
+      <!-- Quick set: default ranker (hot_reload) -->
+      <div class="card">
+        <div class="card-title" title="Rankers (ranking strategies) control how search results are scored and ordered. Options include pure BM25 keyword search, pure vector similarity, hybrid RRF (reciprocal rank fusion), linear blending, and various boosted/combined variants. Hover any option in the dropdown above to see its description.">Default ranker <span class="badge badge-ok" style="margin-left:6px">hot reload</span></div>
+        <div class="form-row">
+          <select class="form-select" id="cfg-ranker" style="min-width:260px"></select>
+          <button class="btn btn-primary" onclick="saveConfigKey('query_default_ranker', document.getElementById('cfg-ranker').value, 'str', 'cfg-ranker-msg')">Save</button>
+        </div>
+        <div id="cfg-ranker-msg"></div>
+      </div>
+
+      <!-- Enrichment mode (restart_required) -->
+      <div class="card">
+        <div class="card-title">Enrichment mode <span class="badge badge-warn" style="margin-left:6px">restart required</span></div>
+        <div class="form-row">
+          <select class="form-select" id="cfg-enrich-mode" style="min-width:240px" onchange="onEnrichModeChange(this.value)">
+            <option value="single_pass">single_pass — 1 LLM call (cheaper, less metadata)</option>
+            <option value="dual_pass">dual_pass — separate AQ + KE calls (richer metadata)</option>
+          </select>
+          <button class="btn btn-primary" onclick="saveConfigKey('enrichment_mode', document.getElementById('cfg-enrich-mode').value, 'str', 'cfg-enrich-msg')">Save</button>
+        </div>
+        <div id="cfg-enrich-msg"></div>
+      </div>
+
+      <!-- LLM enrichment panel: single_pass shows AQ only; dual_pass shows AQ + KE -->
+      <div class="card" id="cfg-panel-aq">
+        <div class="card-title" id="cfg-panel-aq-title">LLM enrichment — server &amp; model <span class="badge badge-warn" style="margin-left:6px">restart required</span></div>
+        <div class="form-row" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:180px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Server</div>
+            <select class="form-select" id="cfg-chat_server_aq"></select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Model</div>
+            <select class="form-select" id="cfg-chat_model_aq"></select>
+          </div>
+          <button class="btn btn-primary" onclick="saveProviderAndModel('chat_server_aq','chat_model_aq','cfg-aq-msg')">Save</button>
+        </div>
+        <div id="cfg-aq-msg" style="margin-top:6px"></div>
+      </div>
+
+      <!-- KE panel: only visible in dual_pass -->
+      <div class="card" id="cfg-panel-ke" style="display:none">
+        <div class="card-title">KE enrichment — server &amp; model <span class="badge badge-warn" style="margin-left:6px">restart required</span></div>
+        <div class="form-row" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:180px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Server</div>
+            <select class="form-select" id="cfg-chat_server_ke"></select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Model</div>
+            <select class="form-select" id="cfg-chat_model_ke"></select>
+          </div>
+          <button class="btn btn-primary" onclick="saveProviderAndModel('chat_server_ke','chat_model_ke','cfg-ke-msg')">Save</button>
+        </div>
+        <div id="cfg-ke-msg" style="margin-top:6px"></div>
+      </div>
+
+      <!-- Embedding panel: always visible -->
+      <div class="card" id="cfg-panel-embed">
+        <div class="card-title">Embedding — server &amp; model <span class="badge badge-warn" style="margin-left:6px">restart required</span></div>
+        <div id="cfg-embed-status" style="margin:6px 0 10px;font-size:0.78rem;color:var(--dim)"></div>
+        <div class="form-row" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:180px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Server</div>
+            <select class="form-select" id="cfg-embed_server"></select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px">
+            <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim)">Model</div>
+            <select class="form-select" id="cfg-embed_model"></select>
+          </div>
+          <button class="btn btn-primary" onclick="saveProviderAndModel('embed_server','embed_model','cfg-embed-msg')">Save</button>
+        </div>
+        <div id="cfg-embed-msg" style="margin-top:6px"></div>
+      </div>
+
+      <!-- Rate limiting (hot_reload) -->
+      <div class="card">
+        <div class="card-title">Rate limit <span class="badge badge-ok" style="margin-left:6px">hot reload</span></div>
+        <div class="form-row">
+          <input class="form-input" id="cfg-rate-limit" type="number" min="1" max="99999" style="width:120px" placeholder="RPM" />
+          <button class="btn btn-primary" onclick="saveConfigKey('rate_limit_rpm', document.getElementById('cfg-rate-limit').value, 'int', 'cfg-rate-limit-msg')">Save</button>
+        </div>
+        <div id="cfg-rate-limit-msg"></div>
+      </div>
+
+      <!-- Full config table -->
+      <div class="card">
+        <div class="card-title">All editable keys</div>
+        <div id="cfg-meta"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- CORPUS -->
+    <div class="panel" id="panel-scopes">
+      <div class="panel-title">Access Controls</div>
+      <div class="panel-sub">Manage workspaces and corpora used for retrieval scope.</div>
+
+      <div class="card">
+        <div class="card-title">Create workspace</div>
+        <div class="form-row">
+          <input class="form-input" id="ws-name" placeholder="Workspace name" />
+          <select class="form-select" id="ws-tier" style="flex:none;min-width:140px">
+            <option value="private">private</option>
+            <option value="internal_only" selected>internal_only</option>
+            <option value="public">public</option>
+          </select>
+          <button class="btn btn-primary" onclick="createWorkspace()">Create</button>
+        </div>
+        <div id="ws-result"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Create corpus</div>
+        <div class="form-row">
+          <input class="form-input" id="corpus-name" placeholder="Corpus name" />
+          <input class="form-input" id="corpus-slug" placeholder="corpus-slug" style="max-width:220px" />
+        </div>
+        <div class="form-row">
+          <select class="form-select" id="corpus-workspace" style="min-width:260px"></select>
+          <select class="form-select" id="corpus-tier" style="flex:none;min-width:140px">
+            <option value="private">private</option>
+            <option value="internal_only" selected>internal_only</option>
+            <option value="public">public</option>
+          </select>
+          <button class="btn btn-primary" onclick="createCorpus()">Create</button>
+        </div>
+        <div id="corpus-create-result"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Access control reference</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="badge badge-ok">public</span>
+            <span style="color:var(--dim)">Accessible to any valid API key or authenticated user</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="badge badge-purple">internal_only</span>
+            <span style="color:var(--dim)">Accessible only to users within the same workspace</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="badge badge-dim">private</span>
+            <span style="color:var(--dim)">Accessible only to the owner of the workspace/corpus</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Workspaces</div>
+        <div id="workspaces-list"><div class="loading-row">Loading…</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Corpora</div>
+        <div id="corpora-list"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- CORPUS -->
+    <div class="panel" id="panel-corpus">
+      <div class="panel-title">Corpus</div>
+      <div class="panel-sub">Browse, inspect, and manage the document corpus.</div>
+
+      <div id="corpus-stats" style="margin-bottom:20px"><div class="loading-row">Loading…</div></div>
+
+      <div class="tool-links">
+        <a href="/ui/corpus.html" class="tool-link">Corpus browser <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/health.html" class="tool-link">Health <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/status.html" class="tool-link">Service Status <span class="tool-link-arrow">↗</span></a>
+
+        <a href="/ui/documents.html" class="tool-link">Catalog <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/probe.html" class="tool-link">Probe <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/walk.html" class="tool-link">Walk <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/find-similar.html" class="tool-link">Find similar <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/gap-analysis.html" class="tool-link">Gap analysis <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/retrieval-explorer.html" class="tool-link">Retrieval explorer <span class="tool-link-arrow">↗</span></a>
+      </div>
+    </div>
+
+    <!-- FEEDS -->
+    <div class="panel" id="panel-feeds">
+      <div class="panel-title">Feeds</div>
+      <div class="panel-sub">Manage RSS feed subscriptions for the public corpus.</div>
+
+      <div class="card">
+        <div class="card-title">Add feed</div>
+        <div class="form-row">
+          <input class="form-input" id="feed-url" placeholder="Feed URL (https://…)" style="flex:2" />
+          <input class="form-input" id="feed-name" placeholder="Name" />
+          <input class="form-input" id="feed-corpus" placeholder="Corpus ID (optional)" />
+          <input class="form-input" id="feed-interval" type="number" placeholder="Poll min" value="60" style="width:90px;flex:none" />
+          <button class="btn btn-primary" onclick="createFeed()">Add</button>
+        </div>
+        <div id="feed-add-result"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">All feeds</div>
+        <div id="feeds-list"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- CATALOGS -->
+    <div class="panel" id="panel-catalogs">
+      <div class="panel-title">Catalogs</div>
+      <div class="panel-sub">Register and manage external data catalogs.</div>
+
+      <div class="section-gap"></div>
+      <div class="card">
+        <div class="card-title">Add Catalog</div>
+        <div class="form-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+          <div class="field"><label>Name</label><input id="src-name" class="inp" placeholder="e.g. Production DB" /></div>
+          <div class="field"><label>Type</label>
+            <select id="src-type" class="inp" onchange="updateCatalogTypeFields()">
+              <option value="sqlite">SQLite</option>
+              <option value="postgres">PostgreSQL</option>
+              <option value="mcp">MCP</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;min-width:200px"><label>Config (JSON)</label><input id="src-config" class="inp" placeholder='e.g. {"path":"/tmp/db.sqlite"}' style="font-family:var(--mono);font-size:0.78rem" /></div>
+          <div class="field" id="src-api-key-field" style="display:none"><label>API Key</label><input id="src-api-key" class="inp" type="password" placeholder="sk_live_..." /></div>
+          <button class="btn btn-approve" onclick="createCatalog()">Add</button>
+        </div>
+        <div id="src-create-result" style="margin-top:8px"></div>
+      </div>
+
+      <div class="section-gap"></div>
+      <div class="card">
+        <div class="card-title">Registered Catalogs</div>
+        <div id="sources-list"><div class="empty">No sources registered. Add one above.</div></div>
+      </div>
+    </div>
+
+    <!-- EDIT SOURCE MODAL -->
+    <div class="modal-overlay" id="edit-source-modal">
+      <div class="modal-box">
+<div class="modal-title">Edit Catalog</div>
+      <div class="modal-sub">Update the configuration for this catalog.</div>
+
+        <div class="modal-field">
+          <label>Name</label>
+          <input id="edit-src-name" class="inp form-input" placeholder="Catalog name" />
+        </div>
+        <div class="modal-field">
+          <label>Type</label>
+          <select id="edit-src-type" class="inp form-select" onchange="updateEditCatalogTypeFields()">
+            <option value="sqlite">SQLite</option>
+            <option value="postgres">PostgreSQL</option>
+            <option value="mcp">MCP</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Config (JSON)</label>
+          <input id="edit-src-config" class="inp form-input" placeholder='e.g. {"path":"/tmp/db.sqlite"}' style="font-family:var(--mono);font-size:0.78rem" />
+        </div>
+        <div class="modal-field" id="edit-src-api-key-field" style="display:none">
+          <label>API Key</label>
+          <input id="edit-src-api-key" class="inp form-input" type="password" placeholder="Leave blank to keep current value" />
+        </div>
+        <div id="edit-src-msg" style="margin-bottom:10px"></div>
+
+        <div class="modal-footer">
+          <button class="btn" style="background:var(--bg3);color:var(--text);border:1px solid var(--border)" onclick="cancelEditCatalog()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveEditCatalog()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BENCHMARKS -->
+    <div class="panel" id="panel-benchmarks">
+      <div class="panel-title">Benchmarks</div>
+      <div class="panel-sub">Run and review retrieval quality benchmarks.</div>
+      <div class="tool-links">
+        <a href="/ui/query-review.html" class="tool-link">Query review <span class="tool-link-arrow">↗</span></a>
+        <a href="/ui/query-inspector.html" class="tool-link">Query inspector <span class="tool-link-arrow">↗</span></a>
+      </div>
+    </div>
+
+    <!-- TESTING -->
+    <div class="panel" id="panel-testing">
+      <div class="panel-title">E2E Tests</div>
+      <div class="panel-sub">Black-box API tests against the default Dewey Decimal wiki page, using the server's default engines. Each phase deletes prior state, then exercises a live endpoint.</div>
+
+      <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+        <div>
+          <div class="card-title">Target document</div>
+          <div class="mono" style="font-size:0.78rem;color:var(--dim)" id="e2e-target-url">https://en.wikipedia.org/wiki/Dewey_Decimal_Classification</div>
+        </div>
+        <button class="btn btn-primary" id="e2e-flow-btn" onclick="runFullFlow()">▶ Run Full Flow</button>
+      </div>
+
+      <!-- Phase 1: Ingestion -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px">
+          <div class="card-title" style="margin:0">1 · Test Ingestion</div>
+          <button class="btn btn-primary" id="e2e-ingest-btn" onclick="runIngestionPhase()">▶ Test Ingestion</button>
+        </div>
+        <p style="font-size:0.82rem;color:var(--dim);margin-bottom:0">Deletes the existing Dewey document, re-ingests the URL with default enrichment, and waits until it reaches <code class="mono" style="font-size:0.75rem">ready</code> with an embedding.</p>
+        <div id="e2e-ingest-results" style="margin-top:14px;display:none"></div>
+      </div>
+
+      <!-- Phase 2: Query -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px">
+          <div class="card-title" style="margin:0">2 · Test Query</div>
+          <button class="btn btn-primary" id="e2e-query-btn" onclick="runQueryPhase()">▶ Test Query</button>
+        </div>
+        <p style="font-size:0.82rem;color:var(--dim);margin-bottom:0">Runs a search with the server's default ranker and asserts the Dewey document is returned.</p>
+        <div id="e2e-query-results" style="margin-top:14px;display:none"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-panel -->
+</div><!-- /shell -->
+
+<script>
+const API = window._pfx + '/api';
+
+// ── TAB ROUTING ───────────────────────────────────────────────────────────────
+
+function showTab(btn) {
+  const name = btn.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  // Lazy-load on tab switch
+  if (name === 'status') loadServiceStatus();
+  if (name === 'testing') resetTestingPanel();
+  if (name === 'pipeline') loadPipelineFull();
+  if (name === 'queries') loadQueryLog();
+  if (name === 'users') loadUsers();
+  if (name === 'providers') { loadAdminModelCatalog(); }
+  if (name === 'config') loadConfigPanel();
+  if (name === 'scopes') loadScopes();
+  if (name === 'corpus') loadCorpusStats();
+  if (name === 'feeds') loadFeeds();
+   if (name === 'catalogs') loadCatalogs();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+// ── SERVICE STATUS ───────────────────────────────────────────────────────────
+
+const SVC_LABELS = { api: 'API', database: 'Database', cache: 'Cache / Redis', mcp: 'MCP', web_panel: 'Web Panel', ingestion: 'Ingestion Pipeline' };
+const OVERALL_LABELS = { ok: 'All Systems Operational', degraded: 'Partial Degradation', error: 'Service Disruption' };
+let _statusTimer = null;
+let _statusCountdownInterval = null;
+
+async function loadServiceStatus() {
+  const errorEl = document.getElementById('status-error');
+  const gridEl  = document.getElementById('status-grid');
+  const dotEl   = document.getElementById('status-overall-dot');
+  const textEl  = document.getElementById('status-overall-text');
+  const tsEl    = document.getElementById('status-checked-at');
+
+  clearTimeout(_statusTimer);
+  clearInterval(_statusCountdownInterval);
+
+  try {
+    const data = await fetchJSON('/service-status');
+    if (!data) throw new Error('No data');
+    errorEl.style.display = 'none';
+
+    const overall = data.overall || 'error';
+    dotEl.className = 'status-dot ' + overall;
+    textEl.textContent = OVERALL_LABELS[overall] || overall;
+
+    gridEl.innerHTML = Object.entries(data.services || {}).map(([k, v]) => `
+      <div class="svc-card ${v.status}">
+        <div class="svc-name">${SVC_LABELS[k] || k}</div>
+        <div class="svc-state">
+          <span class="status-dot ${v.status}"></span>
+          <span>${v.status === 'ok' ? 'Operational' : v.status === 'degraded' ? 'Degraded' : 'Error'}</span>
+        </div>
+        <div class="svc-msg">${esc(v.message || '')}</div>
+      </div>`).join('');
+
+    if (data.checked_at) {
+      tsEl.textContent = 'Checked ' + new Date(data.checked_at).toLocaleTimeString();
+    }
+
+    // Start 30s countdown then auto-refresh
+    let secs = 30;
+    const cntEl = document.getElementById('status-countdown');
+    const secEl = document.getElementById('status-countdown-sec');
+    cntEl.style.display = '';
+    secEl.textContent = secs;
+    _statusCountdownInterval = setInterval(() => {
+      secs = Math.max(0, secs - 1);
+      secEl.textContent = secs;
+    }, 1000);
+    _statusTimer = setTimeout(() => loadServiceStatus(), 30000);
+
+  } catch (err) {
+    dotEl.className = 'status-dot error';
+    textEl.textContent = 'Could not reach API';
+    errorEl.textContent = 'Error: ' + err.message;
+    errorEl.style.display = '';
+    gridEl.innerHTML = '';
+    document.getElementById('status-countdown').style.display = 'none';
+  }
+}
+
+// ── TESTING (sequential Dewey E2E flow) ─────────────────────────────────────────
+// Black-box API tests against the default Dewey Decimal wiki page using the
+// server's default engines. Each phase tears down prior state, then exercises a
+// live endpoint. Logic is pure client-side fetch — no backend test framework.
+
+const E2E_URL = 'https://en.wikipedia.org/wiki/Dewey_Decimal_Classification';
+const E2E_QUERY = 'Dewey Decimal Classification';
+const E2E_AMBER = 'rgba(245,158,11,0.3)';
+const E2E_GREEN = 'rgba(34,197,94,0.3)';
+const E2E_RED   = 'rgba(239,68,68,0.3)';
+let _e2ePollTimer = null;
+
+function resetTestingPanel() {
+  if (_e2ePollTimer) { clearTimeout(_e2ePollTimer); _e2ePollTimer = null; }
+  ['e2e-ingest-results', 'e2e-query-results'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  });
+  _e2eSetBtns(false);
+}
+
+function _e2eSetBtns(running) {
+  ['e2e-flow-btn', 'e2e-ingest-btn', 'e2e-query-btn'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.disabled = running;
+  });
+}
+
+function _e2eCard(containerId, color, html) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `<div class="card" style="border-color:${color};margin:0">${html}</div>`;
+}
+
+// ── URL-based doc lookup ──────────────────────────────────────────────────────
+// Ingestion assigns a fresh id per call and dedupes the stored row by URL, so the
+// URL is the only stable key. We normalise it (matching _normalize_url in
+// content.py) and find the persisted document via GET /api/documents/list.
+function _e2eLstripWww(host) {
+  // Mirror Python str.lstrip("www.") — strips leading chars in the set {w, .}.
+  let i = 0;
+  while (i < host.length && (host[i] === 'w' || host[i] === '.')) i++;
+  return host.slice(i);
+}
+
+function normalizeUrl(raw) {
+  const s = (raw || '').trim().replace(/\/+$/, '');
+  let u;
+  try { u = new URL(s); } catch { return s; }
+  const keep = [];
+  u.searchParams.forEach((v, k) => { if (!k.startsWith('utm_')) keep.push([k, v]); });
+  const host = _e2eLstripWww(u.host);
+  const qs = keep.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+  let out = `${u.protocol}//${host}${u.pathname}`;
+  if (qs) out += `?${qs}`;
+  if (u.hash) out += u.hash;
+  return out;
+}
+
+async function findDocByUrl(url) {
+  // Return the persisted document record for `url`, or null if not present.
+  const r = await fetch(window._pfx + '/api/documents/list?limit=500', {credentials: 'include'});
+  if (!r.ok) throw new Error(`documents/list HTTP ${r.status}`);
+  const data = await r.json();
+  const target = normalizeUrl(url);
+  return (data.documents || []).find(d => d.url && normalizeUrl(d.url) === target) || null;
+}
+
+// ── Phase 1: Ingestion ────────────────────────────────────────────────────────
+async function runIngestionPhase() {
+  if (_e2ePollTimer) { clearTimeout(_e2ePollTimer); _e2ePollTimer = null; }
+  _e2eSetBtns(true);
+  const C = 'e2e-ingest-results';
+  try {
+    // Service key (when configured) authorises ingest + admin delete.
+    const statusData = await fetchJSON('/service-status').catch(() => null);
+    const svcKey = (statusData && statusData.service_key) || '';
+    const headers = {'Content-Type': 'application/json'};
+    if (svcKey) headers['X-Service-Key'] = svcKey;
+
+    // 1. Teardown — find any existing document for this URL and delete it.
+    _e2eCard(C, E2E_AMBER, `<span class="test-spinner"></span> Looking up existing document…`);
+    const existing = await findDocByUrl(E2E_URL);
+    if (existing) {
+      _e2eCard(C, E2E_AMBER, `<span class="test-spinner"></span> Deleting existing document <code class="mono" style="font-size:0.72rem">${esc(existing.id)}</code>…`);
+      const del = await fetch(`/api/documents/${existing.id}`, {method: 'DELETE', headers, credentials: 'include'});
+      if (del.status !== 204 && del.status !== 404) {
+        const e = await del.json().catch(() => ({detail: `HTTP ${del.status}`}));
+        _e2eCard(C, E2E_RED, `❌ <b>Teardown failed</b> (HTTP ${del.status}): ${esc(e.detail || 'unknown error')}`);
+        _e2eSetBtns(false); return false;
+      }
+    }
+
+    // 2. Ingest fresh with server-default enrichment.
+    _e2eCard(C, E2E_AMBER, `<span class="test-spinner"></span> Fetching <b>${esc(E2E_URL)}</b>…`);
+    const ing = await fetch(window._pfx + '/api/ingest', {method: 'POST', headers, credentials: 'include', body: JSON.stringify({url: E2E_URL})});
+    if (!ing.ok) {
+      const e = await ing.json().catch(() => ({detail: `HTTP ${ing.status}`}));
+      _e2eCard(C, E2E_RED, `❌ <b>Ingest rejected</b> (HTTP ${ing.status}): ${esc(e.detail || 'unknown error')}`);
+      _e2eSetBtns(false); return false;
+    }
+
+    // 3. Poll documents/list by URL until the persisted doc reaches ready,
+    //    then inspect it for full detail. (Ingest assigns a fresh id and the
+    //    row dedupes by URL, so we resolve the id from the URL each time.)
+    return await new Promise((resolve) => {
+      let attempt = 0;
+      const maxAttempts = 60; // ~2 minutes at 2s intervals
+      const poll = async () => {
+        if (attempt >= maxAttempts) {
+          _e2eCard(C, E2E_RED, `⏱️ <b>Timed out</b> after ~2 min. The document never reached <code>ready</code>.`);
+          _e2eSetBtns(false); resolve(false); return;
+        }
+        try {
+          const rec = await findDocByUrl(E2E_URL);
+          if (rec && (rec.status === 'failed' || rec.status === 'terminal')) {
+            _e2eCard(C, E2E_RED, `❌ <b>Ingestion failed</b> — status <code>${esc(rec.status)}</code>.`);
+            _e2eSetBtns(false); resolve(false); return;
+          }
+          if (rec && rec.status === 'ready') {
+            // Poll inspect until enriched_at is set (background enrichment task
+            // completed its upsert) AND has_embedding is truthy — or until a
+            // short grace window expires (embedding may still be in-flight even
+            // after enriched_at appears because set_embedding runs after upsert).
+            let doc = null;
+            const embedDeadline = Date.now() + 30000; // 30s grace for embedding
+            while (true) {
+              const ir = await fetch(`/api/documents/${rec.id}/inspect`, {credentials: 'include'});
+              doc = ir.ok ? await ir.json() : rec;
+              if (doc.has_embedding) break;                       // embedding done
+              if (doc.enriched_at && Date.now() > embedDeadline) break; // gave up
+              if (!doc.enriched_at && Date.now() > embedDeadline) break; // no enricher at all
+              const waited = Math.round((embedDeadline - Date.now()) / 1000);
+              _e2eCard(C, E2E_AMBER, `<span class="test-spinner"></span> Embedding… (${waited}s)`);
+              await new Promise(r => setTimeout(r, 2000));
+            }
+            _e2eCard(C, E2E_GREEN, _e2eIngestSummary(doc));
+            _e2eSetBtns(false); resolve(true); return;
+          }
+          const dots = '.'.repeat((attempt % 5) + 1);
+          let phase = 'Fetching';
+          if (rec && rec.status === 'pending') phase = 'Queued for enrichment';
+          else if (rec && rec.status === 'processing') phase = 'Enriching';
+          _e2eCard(C, E2E_AMBER, `<span class="test-spinner"></span> ${phase}${dots} (${attempt + 1}s)`);
+          attempt++; _e2ePollTimer = setTimeout(poll, 2000);
+        } catch (err) {
+          _e2eCard(C, E2E_RED, `❌ <b>Poll error</b>: ${esc(err.message)}`);
+          _e2eSetBtns(false); resolve(false);
+        }
+      };
+      poll();
+    });
+  } catch (err) {
+    _e2eCard(C, E2E_RED, `❌ <b>Error</b>: ${esc(err.message)}`);
+    _e2eSetBtns(false); return false;
+  }
+}
+
+function _e2eIngestSummary(doc) {
+  const summary = doc.embed_summary
+    ? esc(doc.embed_summary.slice(0, 200)) + (doc.embed_summary.length > 200 ? '…' : '')
+    : '—';
+  const chars = (doc.body && doc.body.chars) || 0;
+  // Embedding is config-dependent (needs an embedder/API key). The default
+  // ranker is full-text, so retrieval works without it — show it as an
+  // informational sub-check rather than failing the phase.
+  const embedding = doc.has_embedding
+    ? '✅ ' + (doc.embedding_dims || '') + 'd · <span style="font-size:0.72rem;opacity:0.8">' + esc(doc.embedding_model || '') + '</span>'
+    : '⚠️ none (no embedder configured)';
+  return `
+    <div style="font-weight:600;margin-bottom:12px">✅ Ingestion passed — document is <code>ready</code></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:12px">
+      <div><div class="card-title" style="margin-bottom:4px">Status</div><div class="mono">${esc(doc.status || '—')}</div></div>
+      <div><div class="card-title" style="margin-bottom:4px">Embedding</div><div>${embedding}</div></div>
+      <div><div class="card-title" style="margin-bottom:4px">Body length</div><div class="mono">${chars.toLocaleString()} chars</div></div>
+      <div><div class="card-title" style="margin-bottom:4px">Questions</div><div class="mono">${doc.aq_count || 0}</div></div>
+      <div><div class="card-title" style="margin-bottom:4px">Enriched at</div><div class="mono" style="font-size:0.74rem">${doc.enriched_at ? new Date(doc.enriched_at).toLocaleString() : '—'}</div></div>
+      <div><div class="card-title" style="margin-bottom:4px">Doc id</div><div class="mono" style="font-size:0.7rem">${esc(doc.id || '')}</div></div>
+    </div>
+    <div><div class="card-title" style="margin-bottom:4px">Summary</div><div style="font-size:0.8rem;color:var(--dim);line-height:1.5">${summary}</div></div>
+    <div style="margin-top:12px"><a class="btn btn-primary" href="/ui/inspect.html?id=${esc(doc.id || '')}" target="_blank" style="text-decoration:none">🔍 Full Inspection</a></div>`;
+}
+
+// ── Phase 2: Query ────────────────────────────────────────────────────────────
+async function runQueryPhase() {
+  _e2eSetBtns(true);
+  const C = 'e2e-query-results';
+  try {
+    _e2eCard(C, E2E_AMBER, `<span class="test-spinner"></span> Querying “${esc(E2E_QUERY)}” with the default ranker…`);
+    const r = await fetch(window._pfx + '/api/query', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({query: E2E_QUERY, limit: 10}),
+    });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({detail: `HTTP ${r.status}`}));
+      _e2eCard(C, E2E_RED, `❌ <b>Query failed</b> (HTTP ${r.status}): ${esc(e.detail || 'unknown error')}`);
+      _e2eSetBtns(false); return false;
+    }
+    const data = await r.json();
+    const results = data.results || [];
+    const targetNorm = normalizeUrl(E2E_URL);
+    const idx = results.findIndex(x => x.url && normalizeUrl(x.url) === targetNorm);
+    if (idx === -1) {
+      const got = results.slice(0, 5)
+        .map((x, i) => `<div class="mono" style="font-size:0.74rem">${i + 1}. ${esc(x.title || x.url || x.doc_id || '')}</div>`)
+        .join('') || '<div style="color:var(--dim)">no results returned</div>';
+      _e2eCard(C, E2E_RED, `❌ <b>Dewey document not found</b> in ${results.length} result(s).<div style="margin-top:8px">${got}</div>`);
+      _e2eSetBtns(false); return false;
+    }
+    const hit = results[idx];
+    _e2eCard(C, E2E_GREEN, `
+      <div style="font-weight:600;margin-bottom:12px">✅ Query passed — Dewey document returned at rank ${idx + 1}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px">
+        <div><div class="card-title" style="margin-bottom:4px">Title</div><div style="font-size:0.82rem">${esc(hit.title || '—')}</div></div>
+        <div><div class="card-title" style="margin-bottom:4px">Score</div><div class="mono">${hit.score != null ? hit.score.toFixed(4) : '—'}</div></div>
+        <div><div class="card-title" style="margin-bottom:4px">Rank</div><div class="mono">${idx + 1} of ${results.length}</div></div>
+        <div><div class="card-title" style="margin-bottom:4px">URL</div><div class="mono" style="font-size:0.72rem">${esc(hit.url || '—')}</div></div>
+      </div>`);
+    _e2eSetBtns(false); return true;
+  } catch (err) {
+    _e2eCard(C, E2E_RED, `❌ <b>Error</b>: ${esc(err.message)}`);
+    _e2eSetBtns(false); return false;
+  }
+}
+
+// ── Full flow: ingest → query, one after the other ────────────────────────────
+async function runFullFlow() {
+  resetTestingPanel();
+  _e2eSetBtns(true);
+  const ingested = await runIngestionPhase();
+  if (!ingested) { _e2eSetBtns(false); return; }
+  _e2eSetBtns(true);
+  await runQueryPhase();
+  _e2eSetBtns(false);
+}
+
+async function init() {
+  const me = await fetch(window._pfx + '/api/auth/me', {credentials: 'include'})
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null);
+
+  if (!me) {
+    window.location.href = window._pfx + '/ui/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+
+  if (me.is_admin === false) {
+    document.body.innerHTML = '<div style="padding:24px;font-family:Inter,sans-serif;color:#e2e8f0;background:#07070f;min-height:100vh">Admin access required.</div>';
+    return;
+  }
+
+  // Show server info if available.
+  try {
+    const health = await fetchJSON('/api/pipeline/health');
+    if (health && health.git_describe) {
+      document.getElementById('nav-env').textContent = health.git_describe;
+    }
+  } catch {}
+  loadOverview();
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────────────────────
+
+async function loadOverview() {
+  const [stats, health, errors, queryLog] = await Promise.all([
+    fetchJSON('/stats'),
+    fetchJSON('/api/pipeline/health'),
+    fetchJSON('/api/pipeline/errors'),
+    fetchJSON('/admin/query-log?limit=10'),
+  ]);
+
+  // Stats grid
+  const statsEl = document.getElementById('overview-stats');
+  let html = '<div class="stats-grid">';
+  if (stats) {
+    const by = stats.by_status || {};
+    const ready = stats.ready_count ?? by.ready ?? stats.total_docs ?? stats.total ?? 0;
+    const pending = stats.pending_count ?? by.pending ?? 0;
+    const failed = stats.failed_count ?? by.failed ?? 0;
+    const terminal = stats.terminal_count ?? 0;
+    html += `
+      <div class="stat-box ok"><div class="stat-box-num">${fmt(ready)}</div><div class="stat-box-label">ready docs</div></div>
+      <div class="stat-box ${pending > 0 ? 'warn' : ''}"><div class="stat-box-num">${fmt(pending)}</div><div class="stat-box-label">pending</div></div>
+      <div class="stat-box ${failed > 0 ? 'err' : ''}"><div class="stat-box-num">${fmt(failed)}</div><div class="stat-box-label">failed</div></div>
+      <div class="stat-box ${terminal > 0 ? 'err' : ''}"><div class="stat-box-num">${fmt(terminal)}</div><div class="stat-box-label">terminal</div></div>`;
+  }
+  if (health) {
+    const rate = health.error_rate ?? 0;
+    const cls = rate > 0.1 ? 'err' : rate > 0.02 ? 'warn' : 'ok';
+    html += `<div class="stat-box ${cls}"><div class="stat-box-num">${(rate*100).toFixed(1)}%</div><div class="stat-box-label">error rate (1h)</div></div>`;
+    if (health.workers_running !== undefined) {
+      html += `<div class="stat-box ${health.workers_running > 0 ? 'ok' : 'err'}"><div class="stat-box-num">${health.workers_running}</div><div class="stat-box-label">workers running</div></div>`;
+    }
+  }
+  if (errors) {
+    const unresolved = errors.unresolved_count ?? 0;
+    html += `<div class="stat-box ${unresolved > 100 ? 'err' : unresolved > 0 ? 'warn' : ''}"><div class="stat-box-num">${fmt(unresolved)}</div><div class="stat-box-label">unresolved errors</div></div>`;
+  }
+  html += '</div>';
+  statsEl.innerHTML = html;
+
+  // Pipeline status summary
+  const pipelineEl = document.getElementById('overview-pipeline');
+  if (health) {
+    const items = [];
+    if (health.heartbeat_ok !== undefined) {
+      items.push(`<span class="badge ${health.heartbeat_ok ? 'badge-ok' : 'badge-err'}">${health.heartbeat_ok ? '✓ heartbeat ok' : '✗ heartbeat stale'}</span>`);
+    }
+    if (health.e2e_ok !== undefined) {
+      items.push(`<span class="badge ${health.e2e_ok ? 'badge-ok' : 'badge-err'}">${health.e2e_ok ? '✓ e2e ok' : '✗ e2e failing'}</span>`);
+    }
+    if (health.git_sha) {
+      items.push(`<span class="mono dim">${health.git_sha.slice(0,10)}</span>`);
+    }
+    pipelineEl.innerHTML = items.length
+      ? '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' + items.join('') + '</div>'
+      : '<div class="dim" style="font-size:0.82rem">No health data available.</div>';
+  } else {
+    pipelineEl.innerHTML = '<div class="dim" style="font-size:0.82rem">Could not reach pipeline health endpoint.</div>';
+  }
+
+  // Recent queries
+  renderQueryTable(document.getElementById('overview-queries'), queryLog, 10);
+}
+
+// ── PIPELINE ──────────────────────────────────────────────────────────────────
+
+async function loadPipelineFull() {
+  const [health, errors] = await Promise.all([
+    fetchJSON('/api/pipeline/health'),
+    fetchJSON('/api/pipeline/errors'),
+  ]);
+
+  const statsEl = document.getElementById('pipeline-stats-full');
+  let html = '<div class="stats-grid">';
+  if (health) {
+    const rate = health.error_rate ?? 0;
+    const cls = rate > 0.1 ? 'err' : rate > 0.02 ? 'warn' : 'ok';
+    html += `<div class="stat-box ${cls}"><div class="stat-box-num">${(rate*100).toFixed(1)}%</div><div class="stat-box-label">error rate (1h)</div></div>`;
+    if (health.workers_running !== undefined)
+      html += `<div class="stat-box ${health.workers_running>0?'ok':'err'}"><div class="stat-box-num">${health.workers_running}</div><div class="stat-box-label">workers running</div></div>`;
+    if (health.queue_depth !== undefined)
+      html += `<div class="stat-box ${health.queue_depth>500?'warn':''}"><div class="stat-box-num">${fmt(health.queue_depth)}</div><div class="stat-box-label">queue depth</div></div>`;
+  }
+  if (errors) {
+    html += `<div class="stat-box ${(errors.unresolved_count??0)>100?'err':(errors.unresolved_count??0)>0?'warn':''}"><div class="stat-box-num">${fmt(errors.unresolved_count??0)}</div><div class="stat-box-label">unresolved errors</div></div>`;
+    html += `<div class="stat-box warn"><div class="stat-box-num">${fmt(errors.total_last_hour??0)}</div><div class="stat-box-label">errors this hour</div></div>`;
+  }
+  html += '</div>';
+  statsEl.innerHTML = html;
+
+  // Errors table
+  const errEl = document.getElementById('pipeline-errors');
+  const recentErrors = errors?.unresolved_errors ?? [];
+  if (!recentErrors.length) {
+    errEl.innerHTML = '<div class="empty">No unresolved errors. 🎉</div>';
+    return;
+  }
+  errEl.innerHTML = recentErrors.slice(0, 30).map(e => `
+    <div class="error-row">
+      <div class="error-row-msg">${esc(e.message || 'Unknown error')}</div>
+      <div class="error-row-meta">${esc(e.step||'')} · ${esc(e.error_type||'')} · ${fmtTs(e.created_at)} · retries: ${e.retry_count??0}</div>
+    </div>`).join('');
+}
+
+// ── QUERIES ───────────────────────────────────────────────────────────────────
+
+async function loadQueryLog() {
+  const limit = document.getElementById('query-limit')?.value || 30;
+  const el = document.getElementById('queries-list');
+  el.innerHTML = '<div class="loading-row" style="padding:20px">Loading…</div>';
+  const rows = await fetchJSON(`/admin/query-log?limit=${limit}`);
+  renderQueryTable(el, rows, limit, true);
+}
+
+function renderQueryTable(el, rows, limit, fullMode = false) {
+  if (!rows || !Array.isArray(rows)) {
+    el.innerHTML = '<div class="empty">Could not load query log.</div>'; return;
+  }
+  if (!rows.length) { el.innerHTML = '<div class="empty">No queries yet.</div>'; return; }
+
+  const cols = fullMode
+    ? '<th>#</th><th>Question</th><th>Source</th><th>Model</th><th>Hops</th><th>ms</th><th>Time</th><th></th>'
+    : '<th>#</th><th>Question</th><th>Hops</th><th>Time</th><th></th>';
+
+  const rowsHtml = rows.map(q => {
+    const truncQ = (q.question || '—').length > 60 ? q.question.slice(0, 60) + '…' : (q.question || '—');
+    if (fullMode) {
+      return `<tr>
+        <td class="mono dim">${q.id}</td>
+        <td style="max-width:260px" title="${esc(q.question||'')}">${esc(truncQ)}</td>
+        <td><span class="badge ${q.source==='agent'?'badge-purple':'badge-dim'}">${esc(q.source||'api')}</span></td>
+        <td class="mono dim" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((q.model||'—').split('/').pop())}</td>
+        <td class="mono">${q.hops??0}</td>
+        <td class="mono dim">${q.elapsed_ms ? fmt(q.elapsed_ms) : '—'}</td>
+        <td class="mono dim">${fmtTs(q.ts)}</td>
+        <td><a href="/ui/query-inspector.html?id=${q.id}" style="font-size:0.72rem;color:var(--accent-light);text-decoration:none;white-space:nowrap">inspect ↗</a></td>
+      </tr>`;
+    } else {
+      return `<tr>
+        <td class="mono dim">${q.id}</td>
+        <td style="max-width:320px" title="${esc(q.question||'')}">${esc(truncQ)}</td>
+        <td class="mono">${q.hops??0}</td>
+        <td class="mono dim">${fmtTs(q.ts)}</td>
+        <td><a href="/ui/query-inspector.html?id=${q.id}" style="font-size:0.72rem;color:var(--accent-light);text-decoration:none">inspect ↗</a></td>
+      </tr>`;
+    }
+  }).join('');
+
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr>${cols}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+}
+
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+
+// ── USERS ────────────────────────────────────────────────────────────────────
+
+async function createUser() {
+  const msg = document.getElementById('new-user-msg');
+  const email = document.getElementById('new-user-email')?.value?.trim();
+  const name = document.getElementById('new-user-name')?.value?.trim();
+  const password = document.getElementById('new-user-password')?.value;
+  const is_admin = document.getElementById('new-user-admin')?.value === 'true';
+  if (!email || !password) { msg.textContent = 'Username and password are required.'; msg.style.color = '#f87171'; return; }
+  if (password.length < 8) { msg.textContent = 'Password must be at least 8 characters.'; msg.style.color = '#f87171'; return; }
+  const res = await apiFetch('/admin/users', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email, name: name || undefined, password, is_admin})
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    msg.textContent = err.detail || 'Failed to create user.';
+    msg.style.color = '#f87171';
+  } else {
+    msg.textContent = `User ${email} created.`;
+    msg.style.color = '#34d399';
+    document.getElementById('new-user-email').value = '';
+    document.getElementById('new-user-name').value = '';
+    document.getElementById('new-user-password').value = '';
+    document.getElementById('new-user-admin').value = 'false';
+    loadUsers();
+  }
+}
+
+async function loadUsers() {
+  const el = document.getElementById('users-list');
+  const users = await fetchJSON('/admin/users');
+  if (!users || !Array.isArray(users)) {
+    el.innerHTML = '<div class="empty">Could not load users.</div>'; return;
+  }
+  if (!users.length) {
+    el.innerHTML = '<div class="empty">No users found.</div>'; return;
+  }
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr>
+    <th>Email</th><th>Name</th><th>Role</th><th>Status</th><th>Password</th><th>Last login</th><th>Created</th><th>Documents</th><th></th>
+  </tr></thead><tbody>` +
+    users.map(u => `<tr>
+      <td class="mono">${esc(u.email || '—')}</td>
+      <td style="min-width:140px"><input class="form-input" id="user-name-${esc(u.id)}" value="${esc(u.name || '')}" placeholder="Name" style="min-width:140px" /></td>
+      <td>
+        <select class="form-select" id="user-admin-${esc(u.id)}">
+          <option value="false"${u.is_admin ? '' : ' selected'}>user</option>
+          <option value="true"${u.is_admin ? ' selected' : ''}>admin</option>
+        </select>
+      </td>
+      <td>
+        <select class="form-select" id="user-status-${esc(u.id)}">
+          ${['pending', 'approved', 'rejected'].map(s => `<option value="${s}"${u.activation_status === s ? ' selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td><span class="badge ${u.has_password ? 'badge-ok' : 'badge-dim'}">${u.has_password ? 'set' : 'none'}</span></td>
+      <td class="mono dim">${fmtTs(u.last_login_at)}</td>
+      <td class="mono dim">${fmtDate(u.created_at)}</td>
+      <td class="docs-cell" style="min-width:180px"><button class="btn btn-copy" onclick="loadUserDocuments('${u.id}', this)" style="font-size:0.72rem">Load docs</button></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-copy" onclick="saveUser('${u.id}')" style="margin-right:6px">Save</button>
+        <button class="btn btn-copy" onclick="setUserPassword('${u.id}')" style="margin-right:6px">Password</button>
+        ${u.activation_status !== 'rejected' ? `<button class="btn btn-danger" onclick="suspendUser('${u.id}', '${esc(u.email || u.id)}')" style="margin-right:6px">Suspend</button>` : `<button class="btn btn-copy" onclick="unsuspendUser('${u.id}', '${esc(u.email || u.id)}')" style="margin-right:6px">Unsuspend</button>`}
+        <button class="btn btn-danger" onclick="deleteUser('${u.id}', '${esc(u.email || u.id)}')">Delete</button>
+      </td>
+    </tr>`).join('') + '</tbody></table></div>';
+}
+
+async function saveUser(id) {
+  const body = {
+    name: document.getElementById(`user-name-${id}`)?.value ?? '',
+    is_admin: document.getElementById(`user-admin-${id}`)?.value === 'true',
+    activation_status: document.getElementById(`user-status-${id}`)?.value ?? 'pending',
+  };
+  const ok = await apiFetch(`/admin/users/${id}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  }).then(r => r.ok).catch(() => false);
+  if (!ok) alert('Failed to save user.');
+  else loadUsers();
+}
+
+async function setUserPassword(id) {
+  const password = (window.prompt('Enter new password (min 8 characters):') || '').trim();
+  if (!password) return;
+  if (password.length < 8) { alert('Password must be at least 8 characters.'); return; }
+  const ok = await apiFetch(`/admin/users/${id}/password`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({password}),
+  }).then(r => r.ok).catch(() => false);
+  if (!ok) alert('Failed to set password.');
+  else loadUsers();
+}
+
+async function deleteUser(id, email) {
+  if (!confirm(`Delete user "${email}"? This cannot be undone.`)) return;
+  const ok = await apiFetch(`/admin/users/${id}`, {method: 'DELETE'}).then(r => r.ok).catch(() => false);
+  if (!ok) alert('Failed to delete user.');
+  else loadUsers();
+}
+
+async function suspendUser(id, email) {
+  if (!confirm(`Suspend user "${email}"? They will be locked out until unsuspended.`)) return;
+  const ok = await apiFetch(`/admin/users/${id}/suspend`, {method: 'POST'}).then(r => r.ok).catch(() => false);
+  if (!ok) alert('Failed to suspend user.');
+  else loadUsers();
+}
+
+async function unsuspendUser(id, email) {
+  if (!confirm(`Unsuspend user "${email}"?`)) return;
+  const ok = await apiFetch(`/admin/users/${id}/unsuspend`, {method: 'POST'}).then(r => r.ok).catch(() => false);
+  if (!ok) alert('Failed to unsuspend user.');
+  else loadUsers();
+}
+
+async function loadUserDocuments(userId, row) {
+  // Load docs for this user
+  const docs = await fetchJSON(`/admin/users/${userId}/documents?limit=500`);
+  if (!docs || !docs.length) {
+    const td = row.parentElement.querySelector('.docs-cell');
+    if (td) td.innerHTML = '<span class="badge badge-dim">no docs</span>';
+    return;
+  }
+  const td = row.parentElement.querySelector('.docs-cell');
+  if (td) {
+    td.innerHTML = docs.map(d => {
+      const title = esc(d.title || d.source_url || 'Untitled');
+      const docId = d.id;
+      const date = fmtDate(d.created_at);
+      return `<div style="padding:4px 0;border-bottom:1px solid var(--purple-lo);font-size:0.78rem">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="color:var(--text)" title="${esc(title)}">${title}</span>
+          <span class="mono dim" style="font-size:0.7rem">${date}</span>
+        </div>
+        <div style="margin-top:3px">
+          <button class="btn btn-copy" onclick="disconnectUserDocument('${userId}','${docId}','${esc(title)}')" style="margin-right:4px;font-size:0.7rem">Disconnect</button>
+          <button class="btn btn-danger" onclick="deleteUserDocument('${userId}','${docId}','${esc(title)}')" style="font-size:0.7rem">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+async function disconnectUserDocument(userId, docId, title) {
+  if (!confirm(`Disconnect "${title}" from this user? The document will be preserved.`)) return;
+  const ok = await apiFetch(`/admin/users/${userId}/documents/${docId}/disconnect`, {method: 'POST'}).then(r => r.ok).catch(() => false);
+  if (!ok) alert('Failed to disconnect document.');
+  else loadUserDocuments(userId, null);
+}
+
+async function deleteUserDocument(userId, docId, title) {
+  if (!confirm(`Delete document "${title}"? This cannot be undone.`)) return;
+  const ok = await apiFetch(`/admin/users/${userId}/documents/${docId}`, {method: 'DELETE'}).then(r => r.ok).catch(() => false);
+  if (!ok) alert('Failed to delete document.');
+  else loadUserDocuments(userId, null);
+}
+
+const PROVIDER_KEYS = ['chat_provider_aq', 'chat_model_aq', 'chat_provider_ke', 'chat_model_ke', 'embed_provider', 'embed_model'];
+const PROVIDER_LABELS = {
+  chat_provider_aq: 'AQ provider', chat_model_aq: 'AQ model',
+  chat_provider_ke: 'KE provider', chat_model_ke: 'KE model',
+  embed_provider: 'Embed provider', embed_model: 'Embed model',
+};
+
+// ── ENRICHMENT MODE SHOW/HIDE ────────────────────────────────────────────────
+
+function onEnrichModeChange(mode) {
+  const isDual = mode === 'dual_pass';
+  const kePanel = document.getElementById('cfg-panel-ke');
+  const aqTitle = document.getElementById('cfg-panel-aq-title');
+  if (kePanel) kePanel.style.display = isDual ? '' : 'none';
+  if (aqTitle) aqTitle.innerHTML = isDual
+    ? 'AQ enrichment &mdash; provider &amp; model <span class="badge badge-warn" style="margin-left:6px">restart required</span>'
+    : 'LLM enrichment &mdash; provider &amp; model <span class="badge badge-warn" style="margin-left:6px">restart required</span>';
+}
+
+async function loadConfigPanel() {
+  const [cfg, rankers, catalog, embedCatalog, embedStatus, serversResp] = await Promise.all([
+    fetchJSON('/admin/config'),
+    fetchJSON('/query/rankers'),
+    fetchJSON('/admin/model-catalog?context=admin&include_hidden=false'),
+    fetchJSON('/admin/model-catalog?context=admin&include_hidden=false&purpose=embedding'),
+    fetchJSON('/admin/model-catalog/embedding-status'),
+    fetchJSON('/admin/servers'),
+  ]);
+
+  const valuesByKey = cfg && Array.isArray(cfg.values)
+    ? Object.fromEntries(cfg.values.map(v => [v.key, v]))
+    : {};
+
+  // Ranker dropdown
+  const rankerSelect = document.getElementById('cfg-ranker');
+  rankerSelect.innerHTML = Array.isArray(rankers)
+    ? rankers.map(r => `<option value="${esc(r.id)}" title="${esc(r.description || r.label || '')}">${esc(r.id)}${r.label ? ' · ' + esc(r.label) : ''}</option>`).join('')
+    : '<option value="">No rankers available</option>';
+  if (valuesByKey.query_default_ranker?.value) rankerSelect.value = String(valuesByKey.query_default_ranker.value);
+
+  // Enrichment mode
+  const modeSelect = document.getElementById('cfg-enrich-mode');
+  const currentMode = String(valuesByKey.enrichment_mode?.value || 'single_pass');
+  if (modeSelect) modeSelect.value = currentMode;
+  onEnrichModeChange(currentMode);
+
+  // Rate limit
+  const rateLimitInput = document.getElementById('cfg-rate-limit');
+  if (rateLimitInput && valuesByKey.rate_limit_rpm?.value != null) rateLimitInput.value = valuesByKey.rate_limit_rpm.value;
+
+  // Server labels come from the server registry (label+api_format+endpoint),
+  // not the model catalog — the catalog only supplies per-label model lists.
+  const serverLabels = Array.isArray(serversResp?.servers) ? serversResp.servers.map(s => s.label) : [];
+  const registeredProviders = serverLabels;
+  const registeredEmbedProviders = serverLabels.filter(l => l !== 'anthropic').concat(['local']);
+  const modelsByProvider = catalog?.models_by_provider || {};
+  const embedModelsByProvider = embedCatalog?.models_by_provider || {};
+
+  // Source badge helper
+  const sourceBadge = (src) => src === 'env' ? ' [env]' : src === 'file' ? ' [file]' : src === 'default' ? ' [default]' : '';
+
+  // Build a provider <select> — always includes the configured value even if unregistered
+  function buildProviderSelect(elId, configKey, registeredList, byProvider, modelElId, modelConfigKey, byProviderForModels) {
+    const el = document.getElementById(elId);
+    const modelEl = document.getElementById(modelElId);
+    if (!el || !modelEl) return;
+
+    const configEntry = valuesByKey[configKey];
+    const configuredProvider = configEntry?.value ? String(configEntry.value) : '';
+    const configuredModel = valuesByKey[modelConfigKey]?.value ? String(valuesByKey[modelConfigKey].value) : '';
+    const modelSource = valuesByKey[modelConfigKey]?.source || '';
+
+    // Union: registered providers + configured provider (if different)
+    const allProviders = [...new Set([...registeredList, ...(configuredProvider ? [configuredProvider] : [])])];
+
+    el.innerHTML = allProviders.length
+      ? allProviders.map(p => {
+          const label = registeredList.includes(p) ? p : `${p} (not in registry)`;
+          return `<option value="${esc(p)}">${esc(label)}</option>`;
+        }).join('')
+      : `<option value="${esc(configuredProvider)}">${esc(configuredProvider) || 'none'}</option>`;
+
+    if (configuredProvider) el.value = configuredProvider;
+
+    // Build model dropdown for the active provider
+    function refreshModels(provider) {
+      const regModels = (byProviderForModels[provider] || []).filter(m => m.selectable !== false);
+      const opts = [];
+      // Always put the configured model first if it's set, with source label
+      if (configuredModel) {
+        const label = `${configuredModel}${sourceBadge(modelSource)}`;
+        opts.push(`<option value="${esc(configuredModel)}">${esc(label)}</option>`);
+      }
+      // Add registered models that aren't already listed
+      for (const m of regModels) {
+        if (m.id !== configuredModel) opts.push(`<option value="${esc(m.id)}">${esc(m.id)}</option>`);
+      }
+      if (!opts.length) opts.push('<option value="">No models available</option>');
+      modelEl.innerHTML = opts.join('');
+      if (configuredModel) modelEl.value = configuredModel;
+    }
+
+    refreshModels(configuredProvider || allProviders[0] || '');
+
+    el.onchange = () => {
+      // When provider changes, just show registered models for that provider
+      const provider = el.value;
+      const regModels = (byProviderForModels[provider] || []).filter(m => m.selectable !== false);
+      modelEl.innerHTML = regModels.length
+        ? regModels.map(m => `<option value="${esc(m.id)}">${esc(m.id)}</option>`).join('')
+        : '<option value="">No models for this provider</option>';
+    };
+  }
+
+  buildProviderSelect('cfg-chat_server_aq', 'chat_server_aq', registeredProviders, modelsByProvider, 'cfg-chat_model_aq', 'chat_model_aq', modelsByProvider);
+  buildProviderSelect('cfg-chat_server_ke', 'chat_server_ke', registeredProviders, modelsByProvider, 'cfg-chat_model_ke', 'chat_model_ke', modelsByProvider);
+  buildProviderSelect('cfg-embed_server', 'embed_server', registeredEmbedProviders, embedModelsByProvider, 'cfg-embed_model', 'embed_model', embedModelsByProvider);
+
+  const statusEl = document.getElementById('cfg-embed-status');
+  if (statusEl) {
+    if (!embedStatus) {
+      statusEl.innerHTML = '<span class="badge badge-err">status unavailable</span>';
+    } else {
+      const availBadge = embedStatus.provider_available === true
+        ? '<span class="badge badge-ok">provider reachable</span>'
+        : embedStatus.provider_available === false
+          ? '<span class="badge badge-err">provider unreachable</span>'
+          : '<span class="badge badge-dim">provider probe unknown</span>';
+
+      const mrlBadge = embedStatus.supports_mrl
+        ? '<span class="badge badge-purple">MRL enabled</span>'
+        : '<span class="badge badge-dim">MRL disabled</span>';
+
+      const dims = [
+        `requested=${esc(String(embedStatus.requested_output_dimensions ?? 'none'))}`,
+        `storage=${esc(String(embedStatus.storage_dimensions ?? 'unknown'))}`,
+        `default=${esc(String(embedStatus.default_dimensions ?? 'unknown'))}`,
+        `max=${esc(String(embedStatus.max_dimensions ?? 'unknown'))}`,
+      ].join(' · ');
+
+      statusEl.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:4px">
+          ${availBadge}
+          ${mrlBadge}
+          <span class="badge badge-dim">provider: ${esc(embedStatus.provider || 'unknown')}</span>
+          <span class="badge badge-dim">model: ${esc(embedStatus.model || 'unknown')}</span>
+        </div>
+        <div class="mono" style="font-size:0.72rem;color:var(--dim)">
+          endpoint=${esc(embedStatus.base_url || 'n/a')} · ${dims}
+        </div>
+      `;
+    }
+  }
+
+  // Full config table grouped by section
+  if (!cfg || !Array.isArray(cfg.metadata)) {
+    document.getElementById('cfg-meta').innerHTML = '<div class="empty">Could not load config metadata.</div>';
+    return;
+  }
+
+  const sections = {};
+  for (const m of cfg.metadata) {
+    const sec = m.section || 'general';
+    if (!sections[sec]) sections[sec] = [];
+    sections[sec].push(m);
+  }
+
+  let tableHtml = '';
+  for (const [sec, metas] of Object.entries(sections)) {
+    tableHtml += `<div style="font-size:0.68rem;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;padding:10px 0 6px">${esc(sec)}</div>`;
+    tableHtml += `<table class="tbl" style="margin-bottom:12px"><thead><tr>
+      <th>Key</th><th>Value</th><th>Source</th><th>Reload</th><th>Description</th>
+    </tr></thead><tbody>`;
+    for (const m of metas) {
+      const v = valuesByKey[m.key] || {};
+      tableHtml += `<tr>
+        <td class="mono">${esc(m.key)}</td>
+        <td class="mono dim">${esc(String(v.value ?? ''))}</td>
+        <td><span class="badge badge-dim">${esc(v.source || 'default')}</span></td>
+        <td><span class="badge ${m.reload_behavior === 'hot_reload' ? 'badge-ok' : 'badge-warn'}">${esc(m.reload_behavior)}</span></td>
+        <td style="max-width:220px;font-size:0.78rem;color:var(--dim)">${esc(m.description || '')}</td>
+      </tr>`;
+    }
+    tableHtml += '</tbody></table>';
+  }
+  document.getElementById('cfg-meta').innerHTML = tableHtml;
+}
+
+async function saveConfigKey(path, value, valueType, msgElId) {
+  const msgEl = document.getElementById(msgElId);
+  if (msgEl) msgEl.innerHTML = '<div class="loading-row">Saving…</div>';
+  const res = await apiFetch('/admin/config', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({path, value: String(value), value_type: valueType})
+  }).then(r => r.json()).catch(() => null);
+  if (!res || !res.ok) {
+    const detail = res?.detail ? esc(String(res.detail)) : 'Save failed.';
+    if (msgEl) msgEl.innerHTML = `<div class="msg-err">${detail}</div>`;
+    return;
+  }
+  const behavior = res.reload_behavior || 'unknown';
+  if (msgEl) msgEl.innerHTML = `<div class="msg-ok">✓ Saved. Reload: ${esc(behavior)}</div>`;
+  loadConfigPanel();
+}
+
+async function saveProviderKey(key) {
+  const el = document.getElementById('cfg-' + key);
+  if (!el) return;
+  // Route message to the right panel's msg element
+  let msgId = 'cfg-provider-msg';
+  if (key.startsWith('chat_') && key.includes('_aq')) msgId = 'cfg-aq-msg';
+  else if (key.startsWith('chat_') && key.includes('_ke')) msgId = 'cfg-ke-msg';
+  else if (key.startsWith('embed_')) msgId = 'cfg-embed-msg';
+  await saveConfigKey(key, el.value, 'str', msgId);
+}
+
+function renderServersTable(servers) {
+  const tbody = document.querySelector('#prov-servers-table tbody');
+  if (!tbody) return;
+  if (!servers.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No servers registered.</td></tr>';
+    return;
+  }
+  const providersById = Object.fromEntries((_adminCatalog?.providers || []).map(p => [p.id, p]));
+  tbody.innerHTML = servers.map(s => {
+    const p = providersById[s.label];
+    const availability = !p
+      ? '<span class="badge badge-dim">unknown</span>'
+      : p.available === false
+        ? '<span class="badge badge-err">offline</span>'
+        : '<span class="badge badge-ok">available</span>';
+    return `
+    <tr>
+      <td class="mono">${esc(s.label)}</td>
+      <td><span class="badge badge-dim">${esc(s.api_format)}</span></td>
+      <td class="mono dim">${esc(s.endpoint)}</td>
+      <td class="mono dim">${esc(s.api_key_env || '')}</td>
+      <td>${s.has_api_key ? '<span class="badge badge-ok">yes</span>' : '<span class="badge badge-dim">no</span>'}</td>
+      <td>${availability}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        ${p?.dynamic ? `<button class="btn btn-copy" onclick="refreshProviderModels('${esc(s.label)}')">Refresh</button>
+        <button class="btn btn-danger" onclick="resetProviderModels('${esc(s.label)}')">Reset</button>` : ''}
+        ${s.builtin
+          ? '<span class="badge badge-dim">built-in</span>'
+          : `<button class="btn btn-danger-outline" onclick="deleteServer('${esc(s.label)}')">Delete</button>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function upsertServer() {
+  const label = document.getElementById('prov-server-label').value.trim();
+  const apiFormat = document.getElementById('prov-server-format').value;
+  const endpoint = document.getElementById('prov-server-endpoint').value.trim();
+  const apiKeyEnv = document.getElementById('prov-server-keyenv').value.trim();
+  const apiKey = document.getElementById('prov-server-apikey').value.trim();
+  const extraBodyRaw = document.getElementById('prov-server-extrabody').value.trim();
+  const msgEl = document.getElementById('prov-server-msg');
+
+  if (!label || !endpoint) {
+    if (msgEl) msgEl.innerHTML = '<div class="msg-err">Label and endpoint are required.</div>';
+    return;
+  }
+
+  let extraBody = null;
+  if (extraBodyRaw) {
+    try { extraBody = JSON.parse(extraBodyRaw); }
+    catch (e) {
+      if (msgEl) msgEl.innerHTML = '<div class="msg-err">Extra body params must be valid JSON.</div>';
+      return;
+    }
+  }
+
+  if (msgEl) msgEl.innerHTML = '<div class="loading-row">Saving…</div>';
+
+  const res = await apiFetch(`/admin/servers/${encodeURIComponent(label)}`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      label, api_format: apiFormat, endpoint,
+      api_key_env: apiKeyEnv || null,
+      api_key: apiKey || null,
+      extra_body: extraBody,
+    }),
+  }).then(r => r.json()).catch(() => null);
+
+  if (!res || res.detail) {
+    if (msgEl) msgEl.innerHTML = `<div class="msg-err">${esc(res?.detail ? String(res.detail) : 'Save failed.')}</div>`;
+    return;
+  }
+  if (msgEl) msgEl.innerHTML = '<div class="msg-ok">✓ Server saved.</div>';
+  document.getElementById('prov-server-label').value = '';
+  document.getElementById('prov-server-endpoint').value = '';
+  document.getElementById('prov-server-keyenv').value = '';
+  document.getElementById('prov-server-apikey').value = '';
+  document.getElementById('prov-server-extrabody').value = '';
+  loadAdminModelCatalog();
+}
+
+async function deleteServer(label) {
+  if (!confirm(`Delete server "${label}"? Steps still pointing at this label will fail to resolve.`)) return;
+  await apiFetch(`/admin/servers/${encodeURIComponent(label)}`, { method: 'DELETE' });
+  loadAdminModelCatalog();
+}
+
+async function saveProviderAndModel(providerKey, modelKey, msgId) {
+  const provEl = document.getElementById('cfg-' + providerKey);
+  const modelEl = document.getElementById('cfg-' + modelKey);
+  if (!provEl || !modelEl) return;
+  const msgEl = document.getElementById(msgId);
+
+  // Capture values before any async work — avoids a mid-flight re-render
+  // (from a concurrent loadConfigPanel()) resetting the selects under us.
+  const provVal = provEl.value;
+  const modelVal = modelEl.value;
+
+  if (msgEl) msgEl.innerHTML = '<div class="loading-row">Saving…</div>';
+
+  // Save provider first; stop on failure so model isn't saved against wrong provider.
+  const provRes = await apiFetch('/admin/config', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({path: providerKey, value: provVal, value_type: 'str'})
+  }).then(r => r.json()).catch(() => null);
+
+  if (!provRes || !provRes.ok) {
+    const detail = provRes?.detail ? esc(String(provRes.detail)) : 'Failed to save provider.';
+    if (msgEl) msgEl.innerHTML = `<div class="msg-err">${detail}</div>`;
+    return;
+  }
+
+  const modelRes = await apiFetch('/admin/config', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({path: modelKey, value: modelVal, value_type: 'str'})
+  }).then(r => r.json()).catch(() => null);
+
+  if (!modelRes || !modelRes.ok) {
+    const detail = modelRes?.detail ? esc(String(modelRes.detail)) : 'Failed to save model.';
+    if (msgEl) msgEl.innerHTML = `<div class="msg-err">${detail}</div>`;
+    loadConfigPanel();
+    return;
+  }
+
+  if (msgEl) msgEl.innerHTML = `<div class="msg-ok">✓ Saved. Reload: ${esc(modelRes.reload_behavior || 'restart_required')}</div>`;
+  loadConfigPanel();
+}
+
+// ── MODEL PROVIDERS ──────────────────────────────────────────────────
+
+let _adminCatalog = null;
+
+async function loadAdminModelCatalog() {
+  const [data, serversResp] = await Promise.all([
+    fetchJSON('/admin/model-catalog?context=admin&include_hidden=true'),
+    fetchJSON('/admin/servers'),
+  ]);
+  _adminCatalog = data || { providers: [], models_by_provider: {} };
+  renderServersTable(serversResp?.servers || []);
+  renderModelList();
+  populateProviderModelFormSelect();
+}
+
+function renderModelList() {
+  const el = document.getElementById('prov-model-list');
+  if (!el) return;
+  const byProvider = _adminCatalog?.models_by_provider || {};
+  const providers = Object.keys(byProvider);
+  if (!providers.length) {
+    el.innerHTML = '<div class="empty">No models available.</div>';
+    return;
+  }
+
+  const html = providers.map(pid => {
+    const models = byProvider[pid] || [];
+    const rows = models.map(m => `
+      <tr>
+        <td class="mono">${esc(m.id)}</td>
+        <td class="mono dim">${esc(m.provenance || 'unknown')}</td>
+        <td>${m.hidden ? '<span class="badge badge-warn">hidden</span>' : '<span class="badge badge-ok">selectable</span>'}</td>
+        <td style="display:flex;gap:6px">
+          ${m.hidden
+            ? `<button class="btn btn-copy" onclick="unhideModel('${esc(pid)}','${esc(m.id)}')">Unhide</button>`
+            : `<button class="btn btn-danger" onclick="hideModel('${esc(pid)}','${esc(m.id)}')">Hide</button>`}
+        </td>
+      </tr>
+    `).join('');
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:0.72rem;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">${esc(pid)}</div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Model</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = html;
+}
+
+function populateProviderModelFormSelect() {
+  const sel = document.getElementById('prov-model-provider');
+  if (!sel) return;
+  const providers = _adminCatalog?.providers || [];
+  sel.innerHTML = providers.length
+    ? providers.map(p => `<option value="${esc(p.id)}">${esc(p.id)}</option>`).join('')
+    : '<option value="">No providers</option>';
+}
+
+async function refreshProviderModels(providerId) {
+  await apiFetch(`/admin/model-catalog/providers/${encodeURIComponent(providerId)}/refresh`, {
+    method: 'POST',
+  });
+  await loadAdminModelCatalog();
+}
+
+async function resetProviderModels(providerId) {
+  if (!confirm(`Reset discovered models for ${providerId}?`)) return;
+  await apiFetch(`/admin/model-catalog/providers/${encodeURIComponent(providerId)}/reset`, {
+    method: 'POST',
+  });
+  await loadAdminModelCatalog();
+}
+
+async function addManualModel() {
+  const provider_id = document.getElementById('prov-model-provider')?.value || '';
+  const model_id = document.getElementById('prov-model-id')?.value?.trim() || '';
+  const display_name = document.getElementById('prov-model-name')?.value?.trim() || '';
+  const msgEl = document.getElementById('prov-model-msg');
+  if (!provider_id || !model_id) {
+    if (msgEl) msgEl.innerHTML = '<div class="msg-err">Provider and model id are required.</div>';
+    return;
+  }
+  const res = await apiFetch('/admin/model-catalog/models/add', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({provider_id, model_id, display_name}),
+  }).then(r => r.json()).catch(() => null);
+  if (!res?.ok) {
+    if (msgEl) msgEl.innerHTML = `<div class="msg-err">${esc(res?.detail || 'Failed to add model.')}</div>`;
+    return;
+  }
+  document.getElementById('prov-model-id').value = '';
+  document.getElementById('prov-model-name').value = '';
+  if (msgEl) msgEl.innerHTML = '<div class="msg-ok">✓ Model added.</div>';
+  await loadAdminModelCatalog();
+}
+
+async function hideModel(providerId, modelId) {
+  await apiFetch('/admin/model-catalog/models/hide', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({provider_id: providerId, model_id: modelId}),
+  });
+  await loadAdminModelCatalog();
+}
+
+async function unhideModel(providerId, modelId) {
+  await apiFetch('/admin/model-catalog/models/unhide', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({provider_id: providerId, model_id: modelId}),
+  });
+  await loadAdminModelCatalog();
+}
+
+// ── CORPUS STATS ──────────────────────────────────────────────────────────────
+
+async function loadCorpusStats() {
+  const stats = await fetchJSON('/stats');
+  const el = document.getElementById('corpus-stats');
+  if (!stats) { el.innerHTML = ''; return; }
+  const by = stats.by_status || {};
+  const ready = stats.ready_count ?? by.ready ?? stats.total_docs ?? stats.total ?? 0;
+  const pending = stats.pending_count ?? by.pending ?? 0;
+  const failed = stats.failed_count ?? by.failed ?? 0;
+  el.innerHTML = `<div class="stats-grid">
+    <div class="stat-box ok"><div class="stat-box-num">${fmt(ready)}</div><div class="stat-box-label">ready docs</div></div>
+    <div class="stat-box ${pending>0?'warn':''}"><div class="stat-box-num">${fmt(pending)}</div><div class="stat-box-label">pending</div></div>
+    <div class="stat-box ${failed>0?'err':''}"><div class="stat-box-num">${fmt(failed)}</div><div class="stat-box-label">failed</div></div>
+  </div>`;
+}
+
+// ── SCOPES ───────────────────────────────────────────────────────────────────
+
+async function loadScopes() {
+  const [workspaces, corpora] = await Promise.all([
+    fetchJSON('/admin/workspaces'),
+    fetchJSON('/admin/corpora'),
+  ]);
+
+  const wsSelect = document.getElementById('corpus-workspace');
+  if (wsSelect) {
+    if (Array.isArray(workspaces) && workspaces.length) {
+      wsSelect.innerHTML = workspaces
+        .map(w => `<option value="${w.id}">${esc(w.name)} · ${esc(w.sharing_tier || 'internal_only')}</option>`)
+        .join('');
+    } else {
+      wsSelect.innerHTML = '<option value="">Create a workspace first</option>';
+    }
+  }
+
+  const wsEl = document.getElementById('workspaces-list');
+  if (!Array.isArray(workspaces)) {
+    wsEl.innerHTML = '<div class="empty">Could not load workspaces.</div>';
+  } else if (!workspaces.length) {
+    wsEl.innerHTML = '<div class="empty">No workspaces yet.</div>';
+  } else {
+    wsEl.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr>
+      <th>Name</th><th>Tier</th><th>Created</th><th></th>
+    </tr></thead><tbody>` +
+      workspaces.map(w => `<tr>
+        <td>${esc(w.name || '—')}</td>
+        <td><span class="badge badge-dim">${esc(w.sharing_tier || 'internal_only')}</span></td>
+        <td class="mono dim">${fmtDate(w.created_at)}</td>
+        <td><button class="btn btn-danger" onclick="deleteWorkspace('${w.id}', '${esc(w.name || '')}')">Delete</button></td>
+      </tr>`).join('') + '</tbody></table></div>';
+  }
+
+  const cEl = document.getElementById('corpora-list');
+  if (!Array.isArray(corpora)) {
+    cEl.innerHTML = '<div class="empty">Could not load corpora.</div>';
+  } else if (!corpora.length) {
+    cEl.innerHTML = '<div class="empty">No corpora yet.</div>';
+  } else {
+    cEl.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr>
+      <th>Name</th><th>Slug</th><th>Workspace</th><th>Tier</th><th>Created</th><th></th>
+    </tr></thead><tbody>` +
+      corpora.map(c => `<tr>
+        <td>${esc(c.name || '—')}</td>
+        <td class="mono dim">${esc(c.slug || '—')}</td>
+        <td class="mono dim">${esc(c.workspace_id || '—')}</td>
+        <td><span class="badge badge-dim">${esc(c.sharing_tier || 'internal_only')}</span></td>
+        <td class="mono dim">${fmtDate(c.created_at)}</td>
+        <td><button class="btn btn-danger" onclick="deleteCorpus('${c.id}', '${esc(c.name || '')}')">Delete</button></td>
+      </tr>`).join('') + '</tbody></table></div>';
+  }
+}
+
+async function createWorkspace() {
+  const name = document.getElementById('ws-name').value.trim();
+  const sharing_tier = document.getElementById('ws-tier').value;
+  const resultEl = document.getElementById('ws-result');
+
+  if (!name) {
+    resultEl.innerHTML = '<div class="msg-err">Workspace name is required.</div>';
+    return;
+  }
+
+  const res = await apiFetch('/admin/workspaces', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, sharing_tier})
+  }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+
+  if (!res || !res.id) {
+    resultEl.innerHTML = '<div class="msg-err">Failed to create workspace.</div>';
+    return;
+  }
+
+  resultEl.innerHTML = `<div class="msg-ok">✓ Workspace created: ${esc(res.name)}</div>`;
+  document.getElementById('ws-name').value = '';
+  loadScopes();
+}
+
+async function createCorpus() {
+  const name = document.getElementById('corpus-name').value.trim();
+  const slug = document.getElementById('corpus-slug').value.trim();
+  const workspace_id = document.getElementById('corpus-workspace').value;
+  const sharing_tier = document.getElementById('corpus-tier').value;
+  const resultEl = document.getElementById('corpus-create-result');
+
+  if (!name || !slug || !workspace_id) {
+    resultEl.innerHTML = '<div class="msg-err">Name, slug, and workspace are required.</div>';
+    return;
+  }
+
+  const res = await apiFetch('/admin/corpora', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, slug, workspace_id, sharing_tier})
+  }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+
+  if (!res || !res.id) {
+    resultEl.innerHTML = '<div class="msg-err">Failed to create corpus.</div>';
+    return;
+  }
+
+  resultEl.innerHTML = `<div class="msg-ok">✓ Corpus created: ${esc(res.name)}</div>`;
+  document.getElementById('corpus-name').value = '';
+  document.getElementById('corpus-slug').value = '';
+  loadScopes();
+}
+
+async function deleteWorkspace(id, name) {
+  if (!confirm(`Delete workspace "${name || id}"?`)) return;
+  const ok = await apiFetch(`/admin/workspaces/${id}`, {method: 'DELETE'}).then(r => r.ok).catch(() => false);
+  if (!ok) {
+    alert('Failed to delete workspace. Remove corpora first if needed.');
+    return;
+  }
+  loadScopes();
+}
+
+async function deleteCorpus(id, name) {
+  if (!confirm(`Delete corpus "${name || id}"?`)) return;
+  const ok = await apiFetch(`/admin/corpora/${id}`, {method: 'DELETE'}).then(r => r.ok).catch(() => false);
+  if (!ok) {
+    alert('Failed to delete corpus.');
+    return;
+  }
+  loadScopes();
+}
+
+// ── CONFIG FORMATTING ────────────────────────────────────────────────────────
+
+function formatConfig(config) {
+  if (!config || typeof config !== 'object') return config || '';
+  return Object.entries(config)
+    .map(([k, v]) => k + ': ' + v)
+    .join('\n');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+
+async function fetchJSON(path) {
+  try {
+    const r = await apiFetch(path);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+function authHeaders() {
+  // dewie_api_key is a public-app API key, not valid for the admin panel.
+  // Admin panel authentication is handled via the dewie_session cookie
+  // (sent automatically by the browser with credentials:'include') or
+  // the X-Admin-Key header set by the ADMIN_KEY env var.
+  return {};
+}
+
+function apiFetch(path, options = {}) {
+  const headers = {...authHeaders(), ...(options.headers || {})};
+  // Always include credentials so the dewie_session cookie is sent to the
+  // admin backend, which validates it and grants admin access.
+  return fetch(`${API}${path}`, {...options, headers, credentials: 'include'});
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmt(n) { return Number(n||0).toLocaleString(); }
+
+function fmtTs(ts) {
+  if (!ts) return '—';
+  try {
+    return new Date(ts).toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+  } catch { return String(ts).slice(0, 16).replace('T', ' '); }
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  try { return new Date(ts).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}); }
+  catch { return String(ts).slice(0, 10); }
+}
+
+// ── FEEDS ────────────────────────────────────────────────────────────────────
+
+async function loadFeeds() {
+  const el = document.getElementById('feeds-list');
+  el.innerHTML = '<div class="loading-row">Loading…</div>';
+  const feeds = await fetch(`${API}/admin/feeds`, {credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if (!feeds) { el.innerHTML = '<div class="empty">Failed to load feeds.</div>'; return; }
+  if (!feeds.length) { el.innerHTML = '<div class="empty">No feeds yet. Add one above.</div>'; return; }
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr>
+    <th>Name</th><th>URL</th><th>Corpus</th><th>Interval</th><th>Last polled</th><th>Status</th><th>Actions</th>
+  </tr></thead><tbody>` +
+  feeds.map(f => `<tr id="feed-row-${f.id}">
+    <td style="font-weight:500">${esc(f.name)}</td>
+    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${esc(f.url)}" target="_blank" style="color:var(--accent-light);text-decoration:none;font-size:0.78rem">${esc(f.url)}</a></td>
+    <td style="font-family:var(--mono);font-size:0.75rem;color:var(--dim)">${esc(f.corpus_id||'—')}</td>
+    <td style="font-family:var(--mono);font-size:0.78rem">${f.poll_interval_minutes}m</td>
+    <td style="font-family:var(--mono);font-size:0.72rem;color:var(--dim)">${f.last_polled_at ? new Date(f.last_polled_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : 'never'}</td>
+    <td>${f.enabled ? '<span class="badge badge-approved">enabled</span>' : '<span class="badge badge-rejected">disabled</span>'}</td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-copy" onclick="pollFeed('${f.id}','${esc(f.name)}')">Poll now</button>
+      <button class="btn ${f.enabled?'btn-reject':'btn-approve'}" onclick="toggleFeed('${f.id}',${!f.enabled})">${f.enabled?'Disable':'Enable'}</button>
+      <button class="btn btn-reject" onclick="deleteFeed('${f.id}','${esc(f.name)}')">Delete</button>
+    </td>
+  </tr>`).join('') + '</tbody></table></div>';
+}
+
+async function createFeed() {
+  const url = document.getElementById('feed-url').value.trim();
+  const name = document.getElementById('feed-name').value.trim();
+  const corpus_id = document.getElementById('feed-corpus').value.trim() || null;
+  const poll_interval_minutes = parseInt(document.getElementById('feed-interval').value) || 60;
+  const resultEl = document.getElementById('feed-add-result');
+  if (!url || !name) { resultEl.innerHTML = '<div class="msg-err">URL and name are required.</div>'; return; }
+  const res = await fetch(`${API}/admin/feeds`, {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({url, name, corpus_id, poll_interval_minutes, enabled: true})
+  }).then(r=>r.json()).catch(()=>null);
+  if (!res || res.detail) { resultEl.innerHTML = `<div class="msg-err">${esc(res?.detail||'Failed to create feed.')}</div>`; return; }
+  resultEl.innerHTML = '<div class="msg-ok">✓ Feed created.</div>';
+  document.getElementById('feed-url').value = '';
+  document.getElementById('feed-name').value = '';
+  document.getElementById('feed-corpus').value = '';
+  document.getElementById('feed-interval').value = '60';
+  loadFeeds();
+}
+
+async function toggleFeed(id, enabled) {
+  const res = await fetch(`${API}/admin/feeds/${id}`, {
+    method: 'PATCH', credentials: 'include',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({enabled})
+  }).then(r=>r.json()).catch(()=>null);
+  if (res && !res.detail) loadFeeds(); else alert('Failed to update feed.');
+}
+
+async function pollFeed(id, name) {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Polling…';
+  const res = await fetch(`${API}/admin/feeds/${id}/poll`, {
+    method: 'POST', credentials: 'include'
+  }).then(r=>r.json()).catch(()=>null);
+  btn.disabled = false; btn.textContent = 'Poll now';
+  if (res && res.message) { alert(res.message); loadFeeds(); }
+  else alert('Poll request failed.');
+}
+
+async function deleteFeed(id, name) {
+  if (!confirm(`Delete feed "${name}"? This will not remove already-ingested documents.`)) return;
+  const res = await fetch(`${API}/admin/feeds/${id}`, {
+    method: 'DELETE', credentials: 'include'
+  });
+  if (res.ok || res.status === 204) loadFeeds();
+  else alert('Failed to delete feed.');
+}
+
+// ── CATALOGS ──────────────────────────────────────────────────────────────────
+
+function formatConfig(config) {
+  if (!config || typeof config !== 'object') return config || '';
+  return Object.entries(config)
+    .map(([k, v]) => k + ': ' + v)
+    .join('\n');
+}
+
+async function loadCatalogs() {
+  const el = document.getElementById('sources-list');
+  el.innerHTML = '<div class="loading-row">Loading&hellip;</div>';
+  const srcs = await fetchJSON('/admin/catalogs');
+  if (!srcs) { el.innerHTML = '<div class="empty">Failed to load catalogs.</div>'; return; }
+  if (!srcs.length) { el.innerHTML = '<div class="empty">No catalogs registered. Add one above.</div>'; return; }
+  el.innerHTML = `<table class="tbl"><thead><tr>
+    <th>Name</th><th>Type</th><th>Config</th><th>Status</th><th>Tested</th><th>Actions</th>
+  </tr></thead><tbody>` +
+  srcs.map(s => `<tr id="src-row-${s.id}">
+    <td style="font-weight:500">${esc(s.name)}</td>
+    <td><span class="badge badge-dim">${esc(s.type)}</span></td>
+    <td style="font-family:var(--mono);font-size:0.72rem;color:var(--dim);max-width:280px"><pre style="margin:0;white-space:pre-wrap;word-break:break-all">${esc(formatConfig(s.config||{}))}</pre></td>
+    <td>${s.enabled ? '<span class="badge badge-approved">enabled</span>' : '<span class="badge badge-rejected">disabled</span>'}</td>
+    <td style="font-family:var(--mono);font-size:0.72rem;color:var(--dim)">${s.test_status ? (s.test_status === 'ok' ? '<span class="badge badge-approved">OK</span>' : `<span class="badge badge-rejected" title="${esc(s.test_error||'')}">FAIL</span>`) : 'never tested'}</td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-copy" onclick="editCatalog('${s.id}','${esc(s.name)}')">Edit</button>
+      <button class="btn btn-copy" onclick="testCatalog('${s.id}','${esc(s.name)}')">Test</button>
+      <button class="btn ${s.enabled?'btn-reject':'btn-approve'}" onclick="toggleCatalog('${s.id}',${!s.enabled})">${s.enabled?'Disable':'Enable'}</button>
+      <button class="btn btn-reject" onclick="deleteCatalog('${s.id}','${esc(s.name)}')">Delete</button>
+    </td>
+  </tr>`).join('') + '</tbody></table>';
+}
+
+async function createCatalog() {
+  const name = document.getElementById('src-name').value.trim();
+  const type = document.getElementById('src-type').value;
+  const configRaw = document.getElementById('src-config').value.trim();
+  const apiKey = document.getElementById('src-api-key').value.trim();
+  const resultEl = document.getElementById('src-create-result');
+
+  if (!name) { resultEl.innerHTML = '<div class="msg-err">Name is required.</div>'; return; }
+
+  let config = {};
+  if (configRaw) {
+    try { config = JSON.parse(configRaw); }
+    catch { resultEl.innerHTML = '<div class="msg-err">Invalid JSON in config field.</div>'; return; }
+  }
+
+  // For MCP type, include API key in config
+  if (type === 'mcp' && apiKey) {
+    config.api_key = apiKey;
+  }
+
+  const res = await apiFetch('/admin/catalogs', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, type, config})
+  }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+
+  if (!res || !res.id) {
+    resultEl.innerHTML = '<div class="msg-err">Failed to create catalog.</div>';
+    return;
+  }
+
+  resultEl.innerHTML = `<div class="msg-ok">✓ Catalog "${esc(res.name)}" created.</div>`;
+  document.getElementById('src-name').value = '';
+  document.getElementById('src-config').value = '';
+  document.getElementById('src-api-key').value = '';
+  loadCatalogs();
+}
+
+function updateCatalogTypeFields() {
+  const type = document.getElementById('src-type').value;
+  const apiKeyField = document.getElementById('src-api-key-field');
+  apiKeyField.style.display = type === 'mcp' ? 'block' : 'none';
+}
+
+async function testCatalog(id, name) {
+  const res = await apiFetch('/admin/catalogs/' + id + '/test', {method: 'POST'}).then(r => r.json()).catch(() => ({ok: false, error: 'Network error'}));
+  if (res.ok) {
+    loadCatalogs();
+  } else {
+    alert('Test failed for "' + name + '": ' + (res.error || 'Unknown error'));
+    loadCatalogs();
+  }
+}
+
+async function toggleCatalog(id, enabled) {
+  const res = await apiFetch('/admin/catalogs/' + id, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({enabled})
+  }).then(r => r.json()).catch(() => null);
+  if (res && !res.detail) loadCatalogs();
+  else alert('Failed to update catalog.');
+}
+
+async function deleteCatalog(id, name) {
+  if (!confirm(`Delete catalog "${name}"?`)) return;
+  const ok = await apiFetch('/admin/catalogs/' + id, {method: 'DELETE'}).then(r => r.ok).catch(() => false);
+  if (ok) loadCatalogs();
+  else alert('Failed to delete catalog.');
+}
+
+// ── EDIT CATALOG ──────────────────────────────────────────────────────────────
+
+let _editingSourceId = null;
+
+async function editCatalog(id, name) {
+  const srcs = await fetchJSON('/admin/catalogs');
+  if (!srcs || !srcs.length) return;
+  const src = srcs.find(s => s.id === id);
+  if (!src) { alert('Catalog not found.'); return; }
+
+  _editingSourceId = id;
+
+  // Fill in the edit form with existing values
+  document.getElementById('edit-src-name').value = src.name || '';
+  document.getElementById('edit-src-type').value = src.type || 'sqlite';
+  document.getElementById('edit-src-config').value = JSON.stringify(src.config || {}, null, 2);
+
+  // Hide the API key field; for MCP type show it
+  updateEditCatalogTypeFields();
+
+  // Clear message area
+  document.getElementById('edit-src-msg').innerHTML = '';
+
+  // Open modal
+  document.getElementById('edit-source-modal').classList.add('open');
+}
+
+function updateEditCatalogTypeFields() {
+  const type = document.getElementById('edit-src-type').value;
+  const apiKeyField = document.getElementById('edit-src-api-key-field');
+  apiKeyField.style.display = type === 'mcp' ? 'block' : 'none';
+}
+
+async function saveEditCatalog() {
+  const id = _editingSourceId;
+  const msgEl = document.getElementById('edit-src-msg');
+  if (!id) return;
+
+  const name = document.getElementById('edit-src-name').value.trim();
+  const type = document.getElementById('edit-src-type').value;
+  const configRaw = document.getElementById('edit-src-config').value.trim();
+  const apiKey = document.getElementById('edit-src-api-key').value.trim();
+
+  if (!name) {
+    msgEl.innerHTML = '<div class="msg-err">Name is required.</div>';
+    return;
+  }
+
+  let config = {};
+  if (configRaw) {
+    try { config = JSON.parse(configRaw); }
+    catch {
+      msgEl.innerHTML = '<div class="msg-err">Invalid JSON in config field.</div>';
+      return;
+    }
+  }
+
+  // For MCP type, include API key if provided
+  if (type === 'mcp' && apiKey) {
+    config.api_key = apiKey;
+  }
+
+  const res = await apiFetch(`/admin/catalogs/${id}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, type, config})
+  }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+
+  if (!res || res.detail) {
+    msgEl.innerHTML = `<div class="msg-err">Failed to update catalog: ${esc(res?.detail || 'Unknown error')}</div>`;
+    return;
+  }
+
+  msgEl.innerHTML = '<div class="msg-ok">✓ Catalog updated.</div>';
+  document.getElementById('edit-source-modal').classList.remove('open');
+  _editingSourceId = null;
+  loadCatalogs();
+}
+
+function cancelEditCatalog() {
+  document.getElementById('edit-source-modal').classList.remove('open');
+  document.getElementById('edit-src-msg').innerHTML = '';
+  _editingSourceId = null;
+}
+
+// Close modal when clicking outside the box
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('edit-source-modal');
+  if (e.target === modal) cancelEditCatalog();
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('edit-source-modal');
+    if (modal && modal.classList.contains('open')) cancelEditCatalog();
+  }
+});
+
+async function restartServer() {
+  if (!confirm('Restart the dev server now? It will be unreachable for ~5 seconds.')) return;
+  try {
+    const res = await fetch(window._pfx + '/api/admin/restart', { method: 'POST', credentials: 'include' });
+    if (!res.ok) throw new Error('Restart failed: ' + res.status);
+    const d = await res.json();
+    alert('Restarting: ' + d.detail);
+    setTimeout(() => { window.location.reload(); }, 5000);
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

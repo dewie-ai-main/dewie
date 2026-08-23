@@ -1,0 +1,119 @@
+/*
+ * Dewie Theme System
+ * 4 themes: signal (default), phosphor, obsidian, stacks
+ * Applied via html[data-theme="..."] — higher specificity than :root,
+ * so it overrides each page's inline :root { } block without touching page CSS.
+ */
+
+/* ── Signal (default / cyan) ─────────────────────────────── */
+:root,
+html[data-theme="signal"] {
+  --bg:           #04050d;
+  --bg2:          #080a18;
+  --bg3:          #0c0f22;
+  --border:       rgba(0,220,200,0.15);
+  --border-hi:    rgba(0,220,200,0.38);
+  --purple:       #00dcc8;
+  --purple-dark:  #00b0a0;
+  --purple-lo:    rgba(0,220,200,0.07);
+  --accent-light: #7ff0e8;
+  --green:        #34d399;
+  --red:          #f87171;
+  --yellow:       #fbbf24;
+  --text:         #ccd6f6;
+  --dim:          #4a5580;
+  --xdim:         #252d4a;
+  --grid-color:   rgba(0,220,200,0.025);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+
+/* ── Phosphor (amber terminal) ───────────────────────────── */
+html[data-theme="phosphor"] {
+  --bg:           #060800;
+  --bg2:          #0b0d00;
+  --bg3:          #101200;
+  --border:       rgba(180,160,20,0.2);
+  --border-hi:    rgba(200,179,32,0.42);
+  --purple:       #c8b320;
+  --purple-dark:  #a09218;
+  --purple-lo:    rgba(200,179,32,0.08);
+  --accent-light: #e8d472;
+  --green:        #5fff5f;
+  --red:          #ff5f5f;
+  --yellow:       #ffdf5f;
+  --text:         #d4cc80;
+  --dim:          #6b6440;
+  --xdim:         #3a3620;
+  --grid-color:   rgba(200,179,32,0.04);
+}
+
+/* ── Obsidian+ (refined purple — original direction) ─────── */
+html[data-theme="obsidian"] {
+  --bg:           #07070f;
+  --bg2:          #0d0d1a;
+  --bg3:          #111120;
+  --border:       rgba(99,102,241,0.16);
+  --border-hi:    rgba(99,102,241,0.40);
+  --purple:       #6366f1;
+  --purple-dark:  #5254e0;
+  --purple-lo:    rgba(99,102,241,0.09);
+  --accent-light: #a5b4fc;
+  --green:        #22c55e;
+  --red:          #ef4444;
+  --yellow:       #fbbf24;
+  --text:         #dde4f0;
+  --dim:          #5a6480;
+  --xdim:         #2a3050;
+  --grid-color:   rgba(99,102,241,0.03);
+}
+
+/* ── Stacks (forest green + amber / library) ─────────────── */
+html[data-theme="stacks"] {
+  --bg:           #050b07;
+  --bg2:          #091310;
+  --bg3:          #0d1b16;
+  --border:       rgba(120,160,100,0.15);
+  --border-hi:    rgba(184,146,42,0.40);
+  --purple:       #b8922a;
+  --purple-dark:  #9a7820;
+  --purple-lo:    rgba(184,146,42,0.08);
+  --accent-light: #d4a84b;
+  --green:        #5aaa7a;
+  --red:          #c05050;
+  --yellow:       #c8902a;
+  --text:         #c8d4c0;
+  --dim:          #4d6558;
+  --xdim:         #283832;
+  --grid-color:   rgba(120,160,100,0.04);
+}
+
+/* ── Grid background override ────────────────────────────── */
+/*
+ * Each page defines body::before with a hardcoded rgba color.
+ * This rule overrides it via the --grid-color var.
+ * It must be loaded AFTER the page's <style> block to win the cascade.
+ */
+body::before {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px) !important;
+}
+
+/* ── Phosphor scanlines ──────────────────────────────────── */
+html[data-theme="phosphor"] body::before {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+    repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px
+    ) !important;
+}
+
+/* ── Stacks: horizontal rules only ──────────────────────── */
+html[data-theme="stacks"] body::before {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px) !important;
+  background-size: 100% 24px !important;
+}

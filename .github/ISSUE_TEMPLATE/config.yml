@@ -1,0 +1,10 @@
+contact_links:
+  - name: Dewie Community
+    url: https://github.com/dewie-ai-main/dewie/discussions
+    about: Ask questions, share ideas, and discuss the project
+  - name: Documentation
+    url: https://github.com/dewie-ai-main/dewie/blob/main/README.md
+    about: Check the README and docs before filing an issue
+  - name: Security Concerns
+    url: https://github.com/dewie-ai-main/dewie/blob/main/SECURITY.md
+    about: Report security vulnerabilities

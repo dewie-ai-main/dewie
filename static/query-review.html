@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+<script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><circle cx='10' cy='10' r='10' fill='%236366f1'/><path d='M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2 2 0 110 4 2 2 0 010-4zm0 9.5c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z' fill='white'/></svg>" type="image/svg+xml" /><title>Dewie — Query Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07070f;--bg2:#0d0d1a;--bg3:#12121f;--border:var(--border);--purple:var(--purple);--purple-lo:var(--purple-lo);--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--dim:#64748b;--xdim:#334155;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px);background-size:48px 48px;}
+nav{position:relative;z-index:100;background:rgba(7,7,15,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-shrink:0;}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
+.nav-logo-mark{width:28px;height:28px;background:var(--purple);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.nav-logo-mark svg{width:15px;height:15px;fill:#fff;}
+.nav-logo-text{font-family:var(--mono);font-size:0.9rem;font-weight:500;color:var(--text);}
+.nav-logo-text span{color:var(--purple);}
+.nav-links{display:flex;align-items:center;gap:2px;}
+.nav-badge{font-size:0.68rem;font-family:var(--mono);color:var(--accent-light);background:var(--purple-lo);border:1px solid var(--border);border-radius:4px;padding:2px 7px;margin-left:8px;}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.nav-link{font-size:0.82rem;color:var(--dim);text-decoration:none;padding:5px 12px;border-radius:6px;transition:all 0.15s;}
+.nav-link:hover{color:var(--text);background:var(--purple-lo);}
+.nav-link.active{color:var(--text);background:var(--purple-lo);}
+.layout{position:relative;z-index:1;display:flex;flex:1;min-height:0;}
+.list-col{width:360px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(13,13,26,0.8);}
+.list-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.source-toggle{display:flex;gap:4px;margin-bottom:10px;}
+.toggle-btn{flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--dim);font-size:0.72rem;font-family:var(--sans);cursor:pointer;transition:all 0.15s;}
+.toggle-btn.active{background:var(--purple-lo);color:var(--accent-light);border-color:var(--border-hi);}
+.filter-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:0.8rem;font-family:var(--sans);outline:none;}
+.filter-input:focus{border-color:var(--purple);}
+.filter-input::placeholder{color:var(--xdim);}
+.query-list{flex:1;overflow-y:auto;}
+.query-item{padding:12px 16px;border-bottom:1px solid var(--purple-lo);cursor:pointer;transition:background 0.1s;}
+.query-item:hover{background:var(--purple-lo);}
+.query-item.active{background:var(--purple-lo);border-left:2px solid var(--purple);}
+.qi-question{font-size:0.82rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px;}
+.qi-meta{font-size:0.68rem;font-family:var(--mono);color:var(--dim);display:flex;gap:8px;}
+.badge{font-size:0.62rem;font-family:var(--mono);padding:1px 5px;border-radius:3px;}
+.badge-agent{background:var(--purple-lo);color:var(--accent-light);border:1px solid var(--border);}
+.badge-retrieval{background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.2);}
+.badge-bench{background:rgba(245,158,11,0.08);color:var(--yellow);border:1px solid rgba(245,158,11,0.2);}
+.detail-col{flex:1;overflow-y:auto;padding:24px;}
+.empty-state{display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-size:0.84rem;}
+.detail-title{font-size:1rem;font-weight:600;margin-bottom:8px;}
+.detail-meta{font-size:0.72rem;font-family:var(--mono);color:var(--dim);margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;}
+.section{margin-bottom:24px;}
+.section-label{font-size:0.65rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:var(--xdim);margin-bottom:10px;}
+.hop-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;}
+.hop-query{font-size:0.82rem;font-weight:500;margin-bottom:8px;color:var(--accent-light);}
+.doc-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--purple-lo);}
+.doc-row:last-child{border-bottom:none;}
+.doc-score{font-family:var(--mono);font-size:0.9rem;font-weight:600;min-width:44px;text-align:right;color:var(--green);}
+.doc-body{flex:1;min-width:0;}
+.doc-title{font-size:0.78rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.doc-source{font-size:0.68rem;color:var(--dim);font-family:var(--mono);}
+.answer-box{background:var(--bg2);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:14px 16px;font-size:0.84rem;line-height:1.6;color:#d1fae5;}
+.btn-sm{font-size:0.72rem;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;}
+.btn-sm:hover{border-color:var(--border-hi);color:var(--text);}
+.loading{color:var(--dim);font-size:0.82rem;padding:16px 0;display:flex;align-items:center;gap:8px;}
+.spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+<script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link">Query</a>
+      <a href="/ui/corpus.html" class="nav-link">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <span id="nav-user" style="font-size:0.78rem;color:var(--dim)"></span>
+      <a href="/ui/admin.html" class="nav-link">← Admin</a>
+    </div>
+  </div>
+</nav>
+<div class="layout">
+  <div class="list-col">
+    <div class="list-header">
+      <div class="source-toggle">
+        <button class="toggle-btn active" id="btn-live" onclick="setSource('live',this)">Live Queries</button>
+      </div>
+      <input class="filter-input" id="filter" placeholder="Filter…" oninput="filterList()"/>
+    </div>
+    <div class="query-list" id="query-list"><div class="loading" style="padding:16px"><div class="spin"></div>Loading…</div></div>
+  </div>
+  <div class="detail-col">
+    <div class="empty-state" id="detail"><span>Select a query to inspect it.</span></div>
+  </div>
+</div>
+<script>
+const API='/api';
+let allQueries=[];
+let source='live';
+
+async function init(){
+  const me=await fetch(`${API}/auth/me`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!me||me.detail){window.location.href='/auth/google';return;}
+  if(!me.is_admin){window.location.href='/ui/app.html';return;}
+  document.getElementById('nav-user').textContent=me.email||'';
+  loadList();
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id');
+  if(id){setTimeout(()=>loadDetail(id),800);}
+}
+
+async function loadList(){
+  const el=document.getElementById('query-list');
+  el.innerHTML='<div class="loading" style="padding:16px"><div class="spin"></div>Loading…</div>';
+  const endpoint='/admin/query-log?limit=100';
+  const rows=await fetch(`${API}${endpoint}`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  allQueries=Array.isArray(rows)?rows:[];
+  renderList(allQueries);
+}
+
+function renderList(rows){
+  const el=document.getElementById('query-list');
+  if(!rows.length){el.innerHTML='<div class="loading" style="padding:16px;color:var(--dim)">No queries found.</div>';return;}
+  el.innerHTML=rows.map(q=>{
+    const qId=q.id||q.query_id||'';
+    const question=q.question||q.query||q.q||'';
+    const ts=q.ts||q.created_at||q.timestamp||'';
+    const src=q.source||q.type||'';
+    return `<div class="query-item" id="qi-${qId}" onclick="selectQuery('${qId}')">
+      <div class="qi-question">${esc(question.slice(0,80))}</div>
+      <div class="qi-meta">
+        <span>${ts?(new Date(ts)).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):''}</span>
+        ${src?`<span class="badge badge-${src==='agent'?'agent':src==='retrieval'?'retrieval':'bench'}">${esc(src)}</span>`:''}
+        ${q.hops!==undefined?`<span>${q.hops} hops</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterList(){
+  const f=document.getElementById('filter').value.toLowerCase();
+  renderList(f?allQueries.filter(q=>(q.question||q.query||'').toLowerCase().includes(f)):allQueries);
+}
+
+function setSource(s,btn){
+  source=s;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadList();
+}
+
+async function selectQuery(id){
+  document.querySelectorAll('.query-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`qi-${id}`)?.classList.add('active');
+  history.replaceState(null,'',`?id=${id}`);
+  loadDetail(id);
+}
+
+async function loadDetail(id){
+  const det=document.getElementById('detail');
+  det.innerHTML='<div class="loading"><div class="spin"></div>Loading query detail…</div>';
+  const endpoint=`/admin/query-log/${id}`;
+  const q=await fetch(`${API}${endpoint}`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!q){det.innerHTML='<div class="empty-state"><span>Could not load query detail.</span></div>';return;}
+  renderDetail(q);
+}
+
+function renderDetail(q){
+  const det=document.getElementById('detail');
+  const question=q.question||q.query||q.q||'';
+  const ts=q.ts||q.created_at||'';
+  const answer=q.answer||q.final_answer||'';
+  const hops=q.tool_calls||q.hops_detail||[];
+  det.innerHTML=`
+    <div class="detail-title">${esc(question)}</div>
+    <div class="detail-meta">
+      ${ts?`<span>${new Date(ts).toLocaleString()}</span>`:''}
+      ${q.model?`<span>model: ${esc(q.model)}</span>`:''}
+      ${q.source?`<span class="badge badge-${q.source==='agent'?'agent':'retrieval'}">${esc(q.source)}</span>`:''}
+      ${q.hops!==undefined?`<span>${q.hops} hops</span>`:''}
+      ${q.query_id||q.id?`<span style="color:var(--xdim)">${esc(q.query_id||q.id)}</span>`:''}
+    </div>
+    ${hops.length?`<div class="section">
+      <div class="section-label">Tool Calls & Retrieved Docs</div>
+      ${hops.map((hop,i)=>`
+        <div class="hop-card">
+          <div class="hop-query">Hop ${i+1}: "${esc(hop.query||hop.search_query||'')}"</div>
+          ${(hop.results||[]).map(r=>`
+            <div class="doc-row">
+              <div class="doc-score">${((r.score||0)*100).toFixed(0)}</div>
+              <div class="doc-body">
+                <div class="doc-title">${esc(r.title||r.url||'')}</div>
+                <div class="doc-source">${esc(r.source||'')}</div>
+              </div>
+              <a class="btn-sm" href="/ui/inspect.html?id=${r.id}" style="flex-shrink:0">🔍</a>
+            </div>`).join('')}
+        </div>`).join('')}
+    </div>`:''}
+    ${answer?`<div class="section">
+      <div class="section-label">Answer</div>
+      <div class="answer-box">${esc(answer)}</div>
+    </div>`:''}
+    ${q.expected_answer?`<div class="section">
+      <div class="section-label">Expected Answer</div>
+      <div class="answer-box" style="border-color:rgba(245,158,11,0.2);color:#fef3c7">${esc(q.expected_answer)}</div>
+      ${q.correct!==undefined?`<div style="margin-top:8px;font-size:0.78rem;font-weight:600;color:${q.correct?'var(--green)':'var(--red)'}">${q.correct?'✓ Correct':'✗ Incorrect'}</div>`:''}
+    </div>`:''}
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn-sm" onclick="replayQuery('${esc(question)}')">↺ Replay</button>
+      <a class="btn-sm" href="/ui/retrieval-explorer.html?q=${encodeURIComponent(question)}">🔍 Explore retrieval</a>
+    </div>`;
+}
+
+async function replayQuery(question){
+  const det=document.getElementById('detail');
+  const existing=det.querySelector('.answer-box');
+  const btn=event.target;
+  btn.disabled=true;btn.textContent='Running…';
+  const data=await fetch(`${API}/query/agent`,{
+    method:'POST',credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query:question,model:'gpt-4o',max_hops:3})
+  }).then(r=>r.ok?r.json():null).catch(()=>null);
+  btn.disabled=false;btn.textContent='↺ Replay';
+  if(!data){return;}
+  const replayBox=document.createElement('div');
+  replayBox.className='section';
+  replayBox.innerHTML=`<div class="section-label">Replay Result</div><div class="answer-box" style="border-color:var(--border-hi);color:#e0e7ff">${esc(data.answer||'No answer')}</div>`;
+  det.appendChild(replayBox);
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

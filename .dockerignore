@@ -1,0 +1,54 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Editor / swap files
+*.swp
+*.swo
+.claude/
+
+# Python
+__pycache__
+*.py[cod]
+*.pyo
+.venv
+venv
+*.egg-info
+dist
+build
+.eggs
+
+# Dev/test
+tests/
+.pytest_cache
+.mypy_cache
+.ruff_cache
+htmlcov/
+.coverage
+coverage.xml
+
+# Local config and secrets
+.env
+.env.local
+.env.local.*
+.env.dev
+.env.docker
+dewie.yml
+dewie.db
+
+# Internal scripts stay out of the image — except the podcast ingest
+# entrypoint, which docker-compose.podcast.yml runs inside the container.
+scripts/
+!scripts/ingest_podcast.py
+
+# Docs (not needed in container)
+docs/
+*.md
+!README.md
+
+# Misc
+.DS_Store
+*.log
+tmp/
+.venv.bak/

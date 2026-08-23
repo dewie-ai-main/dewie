@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dewie — App</title>
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+      --border: var(--border); --purple: var(--purple);
+      --purple-lo: var(--purple-lo); --green: #22c55e;
+      --red: #ef4444; --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+      --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
+    }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(7,7,15,0.9); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo-mark { width: 28px; height: 28px; background: var(--purple); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .nav-logo-mark svg { width: 15px; height: 15px; fill: #fff; }
+    .nav-logo-text { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; color: var(--text); }
+    .nav-logo-text span { color: var(--purple); }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .nav-user { font-size: 0.8rem; color: var(--dim); }
+    .nav-admin { font-size: 0.78rem; color: var(--accent-light); text-decoration: none; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; display: none; }
+    .nav-admin:hover { background: var(--purple-lo); }
+    .nav-links { display: flex; align-items: center; gap: 2px; margin: 0 16px; }
+    .nav-link { font-size: 0.82rem; color: var(--dim); text-decoration: none; padding: 5px 12px; border-radius: 6px; transition: all 0.15s; }
+    .nav-link:hover { color: var(--text); background: var(--purple-lo); }
+    .nav-link.active { color: var(--text); background: var(--purple-lo); }
+    .btn-signout { font-size: 0.78rem; color: var(--dim); background: none; border: none; cursor: pointer; padding: 4px 8px; font-family: var(--sans); }
+    .btn-signout:hover { color: var(--text); }
+
+    /* LAYOUT */
+    .wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+    .section { margin-bottom: 40px; }
+    .section-title { font-size: 0.78rem; font-family: var(--sans); font-weight: 600; color: var(--dim); letter-spacing: 0; text-transform: none; margin-bottom: 16px; }
+
+    /* MODE TABS */
+    .mode-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+    .mode-tab { padding: 7px 16px; border-radius: 7px; font-size: 0.82rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--dim); font-family: var(--sans); transition: all 0.15s; }
+    .mode-tab.active { background: var(--purple-lo); color: var(--accent-light); border-color: var(--border-hi); }
+    .mode-tab:hover:not(.active) { background: var(--bg3); color: var(--text); }
+    .mode-tab.compare-tab.active { background: rgba(34,197,94,0.08); color: var(--green); border-color: rgba(34,197,94,0.3); }
+
+    /* QUERY CARD */
+    .query-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .query-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .query-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 11px 16px; color: var(--text); font-size: 0.9rem; font-family: var(--sans); outline: none; transition: border-color 0.2s; }
+    .query-input:focus { border-color: var(--purple); }
+    .query-input::placeholder { color: var(--xdim); }
+    .btn-primary { background: var(--purple); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; font-family: var(--sans); cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+    .btn-primary:hover { background: var(--purple-dark); }
+    .btn-primary:disabled { background: var(--xdim); cursor: default; }
+    .btn-compare { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.3); padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; font-family: var(--sans); cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .btn-compare:hover { background: rgba(34,197,94,0.22); }
+    .btn-compare:disabled { opacity: 0.4; cursor: default; }
+    .query-meta { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .query-meta label { font-size: 0.78rem; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+    .query-meta select { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.78rem; padding: 4px 8px; outline: none; }
+
+    /* SINGLE RESULTS */
+    #results { margin-top: 20px; display: none; }
+    .result-meta { font-size: 0.75rem; color: var(--dim); margin-bottom: 12px; font-family: var(--mono); }
+    .result-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 8px; transition: border-color 0.2s; }
+    .result-item:hover { border-color: var(--border-hi); }
+    .result-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .result-title { font-size: 0.9rem; font-weight: 500; }
+    .result-title a { color: var(--text); text-decoration: none; }
+    .result-title a:hover { color: var(--accent-light); }
+    .result-score { font-family: var(--mono); font-size: 0.72rem; color: var(--dim); white-space: nowrap; }
+    .result-summary { font-size: 0.8rem; color: var(--dim); line-height: 1.5; margin-bottom: 8px; }
+    .result-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag { font-size: 0.7rem; font-family: var(--mono); padding: 2px 8px; border-radius: 100px; background: var(--purple-lo); border: 1px solid var(--border); color: var(--accent-light); }
+    .tag-source { color: var(--dim); }
+    .tag-type { color: var(--green); background: rgba(34,197,94,0.07); border-color: rgba(34,197,94,0.2); }
+    .gap-signal { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 12px 16px; font-size: 0.82rem; color: #fca5a5; margin-bottom: 12px; }
+    .gap-label { font-family: var(--mono); font-size: 0.7rem; color: var(--red); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+    /* AGENT */
+    .agent-answer { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; font-size: 0.88rem; line-height: 1.65; white-space: pre-wrap; }
+    .agent-meta { font-family: var(--mono); font-size: 0.72rem; color: var(--dim); margin-bottom: 10px; }
+    .trace-toggle { font-size: 0.75rem; color: var(--dim); background: none; border: none; cursor: pointer; font-family: var(--sans); padding: 0; margin-top: 8px; display: block; }
+    .trace-toggle:hover { color: var(--text); }
+    .trace-items { margin-top: 8px; display: none; }
+    .trace-item { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; font-size: 0.78rem; }
+    .trace-tool { font-family: var(--mono); color: var(--accent-light); margin-bottom: 4px; }
+    .trace-args { color: var(--dim); font-family: var(--mono); font-size: 0.72rem; margin-bottom: 4px; }
+    .trace-resp { color: var(--dim); font-size: 0.75rem; white-space: pre-wrap; max-height: 80px; overflow: hidden; }
+
+    /* COMPARE MODE */
+    #compare-results { display: none; margin-top: 20px; }
+    .compare-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .compare-cols { grid-template-columns: 1fr; } }
+    .compare-col { min-width: 0; }
+    .compare-col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .compare-col-label { font-size: 0.72rem; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+    .label-retrieval { color: var(--accent-light); }
+    .label-agent { color: var(--green); }
+    .compare-col-meta { font-size: 0.7rem; font-family: var(--mono); color: var(--dim); margin-left: auto; }
+    .compare-status { font-size: 0.82rem; color: var(--dim); padding: 16px 0; }
+    .compare-status.running { color: var(--dim); }
+    .compare-status.done { color: var(--green); }
+    .compare-status.error { color: #f87171; }
+
+    /* DELTA BANNER */
+    .delta-banner { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; }
+    .delta-icon { font-size: 1.1rem; }
+    .delta-text { font-size: 0.84rem; color: var(--text); }
+    .delta-text strong { color: var(--green); font-family: var(--mono); }
+
+    /* SHARED */
+    .loading { text-align: center; padding: 24px; color: var(--dim); font-size: 0.85rem; }
+    .empty { text-align: center; padding: 24px; color: var(--dim); font-size: 0.85rem; }
+    .error-msg { color: #f87171; font-size: 0.82rem; margin-top: 8px; }
+    .spinner { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* HISTORY */
+    .history-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.15s; }
+    .history-item:hover { border-color: var(--border-hi); }
+    .history-q { font-size: 0.88rem; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-meta { display: flex; gap: 14px; font-size: 0.72rem; color: var(--dim); font-family: var(--mono); }
+    .history-answer { font-size: 0.8rem; color: var(--dim); line-height: 1.5; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; display: none; white-space: pre-wrap; }
+
+    /* QUOTA */
+    .quota-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 24px; }
+    .quota-num { font-family: var(--mono); font-size: 1.6rem; font-weight: 500; }
+    .quota-label { font-size: 0.78rem; color: var(--dim); margin-top: 2px; }
+    .quota-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 100px; overflow: hidden; }
+    .quota-bar { height: 100%; background: var(--purple); border-radius: 100px; transition: width 0.4s; }
+
+  </style>
+  <script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link active">Query</a>
+      <a href="/ui/corpus.html" class="nav-link">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <a href="/ui/account.html" class="nav-admin" id="nav-account-link" style="display:inline-flex">Account</a>
+      <a href="/ui/admin.html" class="nav-admin" id="nav-admin-link">Admin ↗</a>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- QUERY -->
+  <div class="section">
+    <div class="section-title">Query the corpus</div>
+    <div class="query-card">
+
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tab-retrieval" onclick="setMode('retrieval')">Retrieval</button>
+        <button class="mode-tab" id="tab-agent" onclick="setMode('agent')">LLM Query</button>
+        <button class="mode-tab compare-tab" id="tab-compare" onclick="setMode('compare')">Compare ⚡</button>
+      </div>
+
+      <div class="query-row">
+        <input class="query-input" id="q-input" type="text" placeholder="Ask anything…" autocomplete="off" />
+        <button class="btn-primary" id="q-btn" onclick="runQuery()">Search</button>
+      </div>
+
+      <!-- Retrieval options -->
+      <div class="query-meta" id="retrieval-opts">
+        <label>Ranker
+          <select id="q-ranker">
+            <option value="answers_questions_rrf">answers_questions_rrf</option>
+            <option value="rrf_chunks">rrf_chunks</option>
+            <option value="rrf">rrf</option>
+          </select>
+        </label>
+        <label>Results
+          <select id="q-limit">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Agent options -->
+      <div class="query-meta" id="agent-opts" style="display:none">
+        <label>Provider
+          <select id="q-provider"></select>
+        </label>
+        <label>Model
+          <select id="q-model"></select>
+        </label>
+        <label>Max hops
+          <select id="q-hops">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="8">8</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Source selector — shared across retrieval and LLM Query modes -->
+      <div class="query-meta" id="source-opts" style="display:none">
+        <label>Source
+          <select id="q-source">
+            <option value="">Local (default)</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Compare options -->
+      <div class="query-meta" id="compare-opts" style="display:none">
+        <label>Provider
+          <select id="cmp-provider"></select>
+        </label>
+        <label>Model
+          <select id="cmp-model"></select>
+        </label>
+      </div>
+
+      <!-- Single mode results -->
+      <div id="results" style="display:none"></div>
+
+      <!-- Compare mode results -->
+      <div id="compare-results">
+        <div class="compare-cols">
+          <div class="compare-col">
+            <div class="compare-col-header">
+              <span class="compare-col-label label-retrieval">Blind (no corpus)</span>
+              <span class="compare-col-meta" id="cmp-retrieval-meta"></span>
+            </div>
+            <div id="cmp-retrieval-body"><div class="compare-status">Enter a query above to compare.</div></div>
+          </div>
+          <div class="compare-col">
+            <div class="compare-col-header">
+              <span class="compare-col-label label-agent">Dewie</span>
+              <span class="compare-col-meta" id="cmp-agent-meta"></span>
+            </div>
+            <div id="cmp-agent-body"><div class="compare-status">Enter a query above to compare.</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- QUERY HISTORY -->
+  <div class="section">
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Recent queries</span>
+      <button onclick="toggleHistory()" style="font-size:0.72rem;color:var(--dim);background:none;border:none;cursor:pointer;font-family:var(--sans)" id="history-toggle">Show ▼</button>
+    </div>
+    <div id="history-panel" style="display:none">
+      <div id="history-list"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = window._pfx + '/api';
+const _nativeFetch = window.fetch.bind(window);
+window.fetch = async (input, init = {}) => {
+  const url = typeof input === 'string' ? input : input.url;
+  const isSameOrigin = url.startsWith('/') || url.startsWith(window.location.origin);
+  if (!isSameOrigin) return _nativeFetch(input, init);
+
+  // Always include credentials for same-origin requests (session cookie)
+  const headers = new Headers(init.headers || {});
+  
+  // Support legacy API key in localStorage (optional fallback)
+  const key = (localStorage.getItem('dewie_api_key') || '').trim();
+  if (key && !headers.has('X-API-Key')) {
+    headers.set('X-API-Key', key);
+  }
+
+  const resp = await _nativeFetch(url, {
+    ...init,
+    headers,
+    credentials: 'include',  // Include session cookie
+  });
+
+  // Only redirect to login on 401 (unauthenticated). A 403 means the user
+  // IS authenticated but lacks the required permission for that specific
+  // resource — redirecting on 403 would boot logged-in non-admin users to the
+  // login page whenever any admin-only endpoint is called.
+  // Fixes issue #219: logged-in users unable to see content after navigating.
+  if (resp.status === 401 && !key) {
+    const me = await _nativeFetch(`${API}/auth/me`, {credentials:'include'})
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null);
+    
+    // Only allow through when /auth/me confirms local (open) mode.
+    // In local/open mode (AUTH_ENABLED=false), /auth/me returns
+    // { authenticated: true, plan: 'local' } — the user is effectively
+    // always logged in.  Gate on plan === 'local' so that API 401s that
+    // occur during a brief race or misconfiguration don't trap open-mode
+    // users in a redirect loop.
+    // Also stay on page when authenticated===true (session valid but token
+    // may have been issued for a different scope set — let the page handle it).
+    const isLocalMode = me && me.plan === 'local';
+    const isAuthenticated = me && me.authenticated === true;
+    if (!isLocalMode && !isAuthenticated) {
+      window.location.href = window._pfx + '/ui/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      return new Response('Redirecting to login...', { status: 302 });
+    }
+  }
+
+  return resp;
+};
+
+async function init() {
+  const me = await fetch(`${API}/auth/me`, {credentials:'include'})
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null);
+
+  // Redirect unauthenticated users to login.
+  // /auth/me returns { authenticated: false } when auth is enabled and no
+  // valid session cookie is present.  A null response means the /auth routes
+  // are not mounted (OSS/local mode) — in that case we stay on the page.
+  if (me && me.authenticated === false) {
+    window.location.href = window._pfx + '/ui/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+
+  if (me && me.authenticated !== false && !me.detail) {
+    if (me.activation_status === 'pending' || me.activation_status === 'rejected') {
+      window.location.href = window._pfx + '/ui/pending.html';
+      return;
+    }
+    document.getElementById('nav-user').textContent = me.email || '';
+    if (me.is_admin) document.getElementById('nav-admin-link').style.display = 'inline-flex';
+  } else {
+    // OSS/local mode: /auth endpoints are not mounted.
+    document.getElementById('nav-user').textContent = 'local mode';
+    const signOutBtn = document.querySelector('.btn-signout');
+    if (signOutBtn) signOutBtn.style.display = 'none';
+    document.getElementById('nav-admin-link').style.display = 'inline-flex';
+  }
+
+  loadQuota();
+  loadSources();
+  initModelSelectors();
+  document.getElementById('q-input').addEventListener('keydown', e => { if (e.key === 'Enter') runQuery(); });
+  setMode('retrieval');
+}
+
+async function loadSources() {
+  try {
+    const sources = await fetch(`${API}/sources`, { credentials: 'include' }).then(r => r.ok ? r.json() : []);
+    const sel = document.getElementById('q-source');
+    if (!sel || !sources.length) return;
+    sources.filter(s => s.enabled).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = `${s.name} (${s.type})`;
+      sel.appendChild(opt);
+    });
+    const srcRow = document.getElementById('source-opts');
+    if (srcRow && sel.options.length > 1) {
+      const mode = window._queryMode || 'retrieval';
+      if (mode === 'retrieval' || mode === 'agent') srcRow.style.display = 'flex';
+    }
+  } catch (_) { /* non-admin: ignore */ }
+}
+
+// ── MODE ──────────────────────────────────────────────────────────────────────
+
+function setMode(mode) {
+  window._queryMode = mode;
+  ['retrieval','agent','compare'].forEach(m => {
+    document.getElementById(`tab-${m}`).classList.toggle('active', m === mode);
+  });
+  document.getElementById('retrieval-opts').style.display = mode === 'retrieval' ? 'flex' : 'none';
+  document.getElementById('agent-opts').style.display    = mode === 'agent'     ? 'flex' : 'none';
+  document.getElementById('compare-opts').style.display  = mode === 'compare'   ? 'flex' : 'none';
+  const srcRow = document.getElementById('source-opts');
+  if (srcRow) srcRow.style.display = (mode === 'retrieval' || mode === 'agent') && document.getElementById('q-source').options.length > 1 ? 'flex' : 'none';
+  document.getElementById('results').style.display        = mode === 'compare'   ? 'none' : 'none';
+  document.getElementById('compare-results').style.display = mode === 'compare' ? 'block' : 'none';
+
+  const btnMap = { retrieval: 'Search', agent: 'Ask LLM', compare: 'Compare ⚡' };
+  const phMap  = { retrieval: 'Ask anything…', agent: 'Ask a question…', compare: 'Ask a question to compare…' };
+  document.getElementById('q-btn').textContent = btnMap[mode];
+  document.getElementById('q-input').placeholder = phMap[mode];
+
+  if (mode !== 'compare') {
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('results').style.display = 'none';
+  }
+}
+
+// ── DISPATCH ──────────────────────────────────────────────────────────────────
+
+async function runQuery() {
+  const q = document.getElementById('q-input').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('q-btn');
+  btn.disabled = true;
+  const mode = window._queryMode;
+  if (mode === 'compare') {
+    await runCompare(q, btn);
+  } else if (mode === 'agent') {
+    const out = document.getElementById('results');
+    out.style.display = 'block';
+    await runAgentQuery(q, btn, out);
+  } else {
+    const out = document.getElementById('results');
+    out.style.display = 'block';
+    await runRetrievalQuery(q, btn, out);
+  }
+}
+
+// ── RETRIEVAL ─────────────────────────────────────────────────────────────────
+
+async function runRetrievalQuery(q, btn, out) {
+  const ranker = document.getElementById('q-ranker').value;
+  const limit  = parseInt(document.getElementById('q-limit').value);
+  const sourceEl = document.getElementById('q-source');
+  const source_id = sourceEl && sourceEl.value ? sourceEl.value : undefined;
+  btn.textContent = '…';
+  out.innerHTML = '<div class="loading">Searching…</div>';
+  try {
+    const payload = {query: q, ranker, limit};
+    if (source_id) payload.source_id = source_id;
+    const res = await fetch(`${API}/query`, {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(r=>r.json());
+    if (res && res.detail) {
+      out.innerHTML = `<div class="error-msg">Query failed: ${esc(String(res.detail))}</div>`;
+      return;
+    }
+    if (source_id && res.source_id) {
+      out.innerHTML = `<div class="result-meta" style="margin-bottom:6px">🔗 Querying remote source</div>` + renderRetrievalResults(res);
+    } else {
+      out.innerHTML = renderRetrievalResults(res);
+    }
+  } catch(e) {
+    out.innerHTML = `<div class="error-msg">Query failed: ${esc(String(e))}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Search'; loadQuota();
+  }
+}
+
+function renderRetrievalResults(res) {
+  let html = '';
+  if (res.query_id) {
+    html += `<div class="result-meta" style="margin-bottom:6px">query id: <span style="font-family:var(--mono);color:var(--accent-light)">${esc(res.query_id)}</span></div>`;
+  }
+  html += `<div class="result-meta">${res.results?.length ?? 0} results · ${res.as_of ?? ''}</div>`;
+  if (res.category_suggestion) {
+    html += `<div style="background:var(--purple-lo);border:1px solid var(--border);border-radius:7px;padding:9px 14px;margin-bottom:10px;font-size:0.82rem;color:var(--accent-light)">💡 ${esc(res.category_suggestion)}</div>`;
+  }
+  const gap = res.result_confidence?.gap_signal;
+  if (gap) html += `<div class="gap-signal"><div class="gap-label">⚠ Gap signal</div>${esc(gap)}</div>`;
+  if (!res.results?.length) return html + '<div class="empty">No results found.</div>';
+  html += res.results.map(r => `
+    <div class="result-item">
+      <div class="result-header">
+        <div class="result-title"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title||r.url)}</a></div>
+        <div class="result-score">${r.score ? r.score.toFixed(3) : ''}</div>
+      </div>
+      <div class="result-summary">${esc(r.summary||'')}</div>
+      <div class="result-tags">
+        ${r.doc_type ? `<span class="tag tag-type">${esc(r.doc_type)}</span>` : ''}
+        ${(r.topics||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
+        ${r.source ? `<span class="tag tag-source">${esc(r.source)}</span>` : ''}
+      </div>
+    </div>`).join('');
+  return html;
+}
+
+// ── AGENT ─────────────────────────────────────────────────────────────────────
+
+async function runAgentQuery(q, btn, out) {
+  const model    = document.getElementById('q-model').value;
+  const max_hops = parseInt(document.getElementById('q-hops').value);
+  const sourceEl = document.getElementById('q-source');
+  const source_id = sourceEl && sourceEl.value ? sourceEl.value : undefined;
+  btn.textContent = '…';
+  out.innerHTML = '<div class="loading">LLM querying corpus… (10–30s)</div>';
+  try {
+    const payload = {query: q, model, max_hops};
+    if (source_id) payload.source_id = source_id;
+    const res = await fetch(`${API}/query/agent`, {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(r=>r.json());
+    if (res.detail) { out.innerHTML = `<div class="error-msg">${esc(res.detail)}</div>`; return; }
+    out.innerHTML = renderAgentResult(res, model);
+  } catch(e) {
+    out.innerHTML = `<div class="error-msg">Agent query failed: ${esc(String(e))}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Ask LLM'; loadQuota();
+  }
+}
+
+function renderAgentResult(res, model) {
+  const traceId = 'trace-' + Math.random().toString(36).slice(2);
+  let html = '';
+  if (res.query_id) {
+    html += `<div class="result-meta" style="margin-bottom:6px">query id: <span style="font-family:var(--mono);color:var(--accent-light)">${esc(res.query_id)}</span></div>`;
+  }
+  if (res.query) {
+    html += `<div class="result-meta" style="margin-bottom:10px">query: <em style="color:var(--text)">${esc(res.query)}</em></div>`;
+  }
+  // searches = actual hops, reads = doc reads (not hops)
+  const searches = res.searches ?? res.hops ?? 0;
+  const reads = res.reads ?? res.docs_read?.length ?? 0;
+  html += `<div class="agent-meta">${searches} search${searches !== 1?'es':''} · ${reads} doc${reads !== 1?'s':''} read · ${esc(model)}</div>
+    <div class="agent-answer">${esc(res.answer)}</div>`;
+  if (res.tool_calls?.length) {
+    html += `<button class="trace-toggle" onclick="toggleTrace('${traceId}')">▶ Show ${res.tool_calls.length} tool call${res.tool_calls.length!==1?'s':''}</button>
+      <div class="trace-items" id="${traceId}">
+        ${res.tool_calls.map(tc=>`
+          <div class="trace-item">
+            <div class="trace-tool">${esc(tc.tool)}</div>
+            <div class="trace-args">${esc(JSON.stringify(tc.args))}</div>
+            <div class="trace-resp">${esc(tc.response_preview)}</div>
+          </div>`).join('')}
+      </div>`;
+  }
+  return html;
+}
+
+// ── COMPARE ───────────────────────────────────────────────────────────────────
+
+async function runCompare(q, btn) {
+  const model = document.getElementById('cmp-model').value;
+
+  const rBody = document.getElementById('cmp-retrieval-body');
+  const aBody = document.getElementById('cmp-agent-body');
+  const rMeta = document.getElementById('cmp-retrieval-meta');
+  const aMeta = document.getElementById('cmp-agent-meta');
+
+  btn.textContent = '…';
+    rBody.innerHTML = '<div class="compare-status running"><span class="spinner">⟳</span> Asking LLM directly (no corpus)…</div>';
+  aBody.innerHTML = '<div class="compare-status running"><span class="spinner">⟳</span> Agent searching corpus…</div>';
+  rMeta.textContent = '';
+  aMeta.textContent = '';
+
+  const [blindResult, agentResult] = await Promise.allSettled([
+    // Blind: direct LLM, no corpus
+    fetch(`${API}/query/blind`, {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({query: q, model})
+    }).then(r=>r.json()),
+    // Dewie: agent with full corpus access
+    fetch(`${API}/query/agent`, {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({query: q, model, max_hops: 5})
+    }).then(r=>r.json())
+  ]);
+
+  // Blind column
+  if (blindResult.status === 'fulfilled' && !blindResult.value.detail) {
+    const res = blindResult.value;
+    rMeta.textContent = `${esc(model)} · no corpus`;
+    rBody.innerHTML = `<div class="agent-answer">${esc(res.answer || 'No answer.')}</div>`;
+  } else {
+    rMeta.textContent = 'error';
+    rBody.innerHTML = `<div class="compare-status error">${esc(String(blindResult.reason || blindResult.value?.detail || 'Failed'))}</div>`;
+  }
+
+  // Dewie column
+  if (agentResult.status === 'fulfilled' && !agentResult.value.detail) {
+    const res = agentResult.value;
+    const searches = res.searches ?? 0;
+    const reads = res.reads ?? 0;
+    aMeta.textContent = `${searches} search${searches!==1?'es':''} · ${reads} doc${reads!==1?'s':''} read`;
+    aBody.innerHTML = renderAgentResult(res, model);
+  } else {
+    aMeta.textContent = 'error';
+    aBody.innerHTML = `<div class="compare-status error">${esc(String(agentResult.reason || agentResult.value?.detail || 'Failed'))}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Compare ⚡'; loadQuota();
+}
+
+function toggleTrace(id) {
+  const el  = document.getElementById(id);
+  const btn = el.previousElementSibling;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  btn.textContent = (open ? '▶' : '▼') + btn.textContent.slice(1);
+}
+
+// ── QUOTA ─────────────────────────────────────────────────────────────────────
+
+async function loadQuota() {
+  const q = await fetch(`${API}/me/quota`, {credentials:'include'})
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null);
+  if (!q || q.detail) {
+    document.getElementById('quota-used').textContent = '—';
+    document.getElementById('quota-plan').textContent = 'local';
+    document.getElementById('quota-remaining').textContent = 'not enabled';
+    document.getElementById('quota-bar').style.width = '0%';
+    return;
+  }
+  const limit = q.limit;  // null = unlimited (paid plan)
+  const used = q.used ?? 0;
+  document.getElementById('quota-used').textContent = used;
+  document.getElementById('quota-plan').textContent = q.plan ?? 'free';
+  if (limit) {
+    const remaining = Math.max(0, limit - used);
+    document.getElementById('quota-remaining').textContent = `${remaining} / ${limit}`;
+    const pct = Math.min(100, (used / limit) * 100);
+    const bar = document.getElementById('quota-bar');
+    bar.style.width = pct + '%';
+    bar.style.background = pct > 90 ? 'var(--red)' : 'var(--purple)';
+  } else {
+    document.getElementById('quota-remaining').textContent = 'unlimited';
+    document.getElementById('quota-bar').style.width = (Math.min(used, 100) / 100 * 40) + '%';
+  }
+}
+
+// ── PROVIDER → MODEL SELECTOR ────────────────────────────────────────────────
+
+let _catalog = null;  // { providerName: [{ id, name }] }
+
+async function _loadCatalog() {
+  if (_catalog) return _catalog;
+  try {
+    const data = await fetch(`${API}/admin/model-catalog`, {credentials:'include'})
+      .then(r => r.ok ? r.json() : null).catch(() => null);
+    if (!data?.models_by_provider) { _catalog = {}; return {}; }
+    _catalog = {};
+    for (const [provider, models] of Object.entries(data.models_by_provider)) {
+      const selectable = models.filter(m => !m.is_embedding_model && m.selectable !== false && !m.hidden);
+      if (selectable.length) {
+        _catalog[provider] = selectable.map(m => ({ id: m.id, name: m.display_name || m.id }));
+      }
+    }
+  } catch(_) { _catalog = {}; }
+  return _catalog;
+}
+
+async function initModelSelectors() {
+  const catalog = await _loadCatalog();
+  const providers = Object.keys(catalog);
+
+  ['q', 'cmp'].forEach(prefix => {
+    const providerSel = document.getElementById(`${prefix}-provider`);
+    const modelSel    = document.getElementById(`${prefix}-model`);
+
+    if (!providers.length) {
+      providerSel.innerHTML = '<option value="">No providers configured</option>';
+      providerSel.disabled = true;
+      modelSel.innerHTML = '<option value="">—</option>';
+      modelSel.disabled = true;
+      return;
+    }
+
+    providerSel.innerHTML = providers.map(p =>
+      `<option value="${esc(p)}">${esc(p)}</option>`
+    ).join('');
+    providerSel.disabled = false;
+
+    const fillModels = (provider) => {
+      const models = catalog[provider] || [];
+      modelSel.innerHTML = models.length
+        ? models.map(m => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('')
+        : '<option value="">No models</option>';
+      modelSel.disabled = !models.length;
+    };
+
+    providerSel.onchange = () => fillModels(providerSel.value);
+    fillModels(providers[0]);
+  });
+}
+
+function onProviderChange() {} // no-op, handled via initModelSelectors
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+
+let _historyLoaded = false;
+
+function toggleHistory() {
+  const panel = document.getElementById('history-panel');
+  const btn = document.getElementById('history-toggle');
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? 'Show ▼' : 'Hide ▲';
+  if (!open && !_historyLoaded) loadHistory();
+}
+
+async function loadHistory() {
+  _historyLoaded = true;
+  const el = document.getElementById('history-list');
+  const rows = await fetch(`${API}/me/queries?limit=50`, {credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if (!rows || !Array.isArray(rows) || !rows.length) {
+    el.innerHTML = '<div class="empty">No queries yet.</div>'; return;
+  }
+  el.innerHTML = rows.map((q, i) => {
+    const ts = q.ts ? new Date(q.ts).toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+    const answerId = `hist-ans-${i}`;
+    const searches = q.hops || 0;
+    return `<div class="history-item" onclick="toggleHistoryAnswer('${answerId}')">
+      <div class="history-q">${esc(q.question || '—')}</div>
+      <div class="history-meta">
+        <span>${ts}</span>
+        <span>source: ${esc(q.source||'api')}</span>
+        ${searches ? `<span>${searches} search${searches!==1?'es':''}</span>` : ''}
+        ${q.elapsed_ms ? `<span>${q.elapsed_ms}ms</span>` : ''}
+        <span style="color:var(--accent-light)">id: ${q.id}</span>
+      </div>
+      ${q.answer ? `<div class="history-answer" id="${answerId}">${esc(q.answer)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function toggleHistoryAnswer(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function signOut() {
+  await fetch(`${API}/auth/logout`, {method:'POST', credentials:'include'}).catch(() => null);
+  window.location.href = window._pfx + '/ui/login.html';
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

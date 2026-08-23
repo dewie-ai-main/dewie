@@ -1,0 +1,57 @@
+# dewie.yml — operator configuration
+# Copy this file to dewie.yml and fill in your values.
+# dewie.yml is gitignored so secrets stay local.
+
+# ── LLM servers ──────────────────────────────────────────────────────────────
+# Define named servers referenced by chat_server_* and embed_server below.
+servers:
+  - label: llamacpp
+    api_format: openai               # openai | anthropic | ollama
+    endpoint: http://127.0.0.1:8080  # base URL (no trailing slash)
+    api_key_env: LLAMACPP_API_KEY
+    extra_headers: {}
+
+# ── Enrichment ────────────────────────────────────────────────────────────────
+# enrichment_default_backend must match a name in enrichment_backends.
+# Without this the server silently uses "passthrough" (no summary/AQ generated).
+enrichment_default_backend: llamacpp
+enrichment_backends: '[{"name":"llamacpp","type":"http","server":"llamacpp","timeout":300,"max_tokens":8192}]'
+enrichment_mode: dual_pass           # single_pass | dual_pass
+
+# ── Chat models (used by dual_pass AQ/KE and /api/query) ─────────────────────
+chat_server_aq: llamacpp
+chat_model_aq: your-model-id-here
+chat_server_ke: llamacpp
+chat_model_ke: your-model-id-here
+
+# ── Embedding ─────────────────────────────────────────────────────────────────
+# embed_dimensions must match the model's native output size.
+# Changing this requires a schema migration: alembic upgrade head
+embed_server: llamacpp
+embed_model: your-embedding-model-id-here
+embed_dimensions: 1536               # truncates Qwen3-8B output to fit vector(1536) HNSW column
+
+# Ingest source control
+# ingest:
+#   rss_enabled: true
+#   wiki_enabled: false
+#   blocked_sources: []
+#   low_quality_sources: []
+
+# Monitoring / quiet hours
+# monitoring:
+#   timezone: America/Los_Angeles
+#   quiet_start_hour: 23
+#   quiet_end_hour: 7
+
+# File watcher (ingest files dropped into a directory)
+# watcher:
+#   enabled: false
+#   watch_dir: data/bodies
+
+# YouTube channel ingestion
+# youtube:
+#   enabled: false
+#   channels: []
+#   videos_per_channel: 20
+#   schedule_hours: 24

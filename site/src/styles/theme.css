@@ -1,0 +1,233 @@
+/* Dewie docs — "80s retro reborn" theme.
+ * Palette ported from the app's static/theme.css (teal/cyan synthwave on
+ * near-black, JetBrains Mono). Dark-only by design. */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+:root,
+:root[data-theme="dark"],
+:root[data-theme="light"] {
+  /* fonts */
+  --sl-font: "Inter", system-ui, sans-serif;
+  --sl-font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* teal accent (was --purple #00dcc8 in the app theme) */
+  --sl-color-accent-low: #003c37;
+  --sl-color-accent: #00b0a0;
+  --sl-color-accent-high: #7ff0e8;
+
+  /* text + surfaces */
+  --sl-color-white: #ccd6f6;
+  --sl-color-gray-1: #c3cee6;
+  --sl-color-gray-2: #a7b2d0;
+  --sl-color-gray-3: #6b769c;
+  --sl-color-gray-4: #4a5580;
+  --sl-color-gray-5: #252d4a;
+  --sl-color-gray-6: #141a30;
+  --sl-color-black: #04050d;
+
+  --sl-color-bg: #04050d;
+  --sl-color-bg-nav: #080a18;
+  --sl-color-bg-sidebar: #080a18;
+  --sl-color-bg-inline-code: #0c0f22;
+  --sl-color-hairline: rgba(0, 220, 200, 0.15);
+  --sl-color-hairline-light: rgba(0, 220, 200, 0.1);
+  --sl-color-text-accent: #7ff0e8;
+}
+
+/* faint synthwave grid behind everything */
+body {
+  background-image:
+    linear-gradient(rgba(0, 220, 200, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 220, 200, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* neon glow on the site title + headings */
+.site-title,
+.sl-markdown-content h1,
+.sl-markdown-content h2 {
+  text-shadow: 0 0 18px rgba(0, 220, 200, 0.25);
+}
+
+/* links + inline code get the teal treatment */
+.sl-markdown-content a {
+  color: var(--sl-color-text-accent);
+  text-decoration-color: rgba(0, 220, 200, 0.4);
+}
+.sl-markdown-content code {
+  border: 1px solid rgba(0, 220, 200, 0.15);
+}
+
+/* hero CTA on the splash landing */
+.hero .actions a[data-variant="primary"] {
+  box-shadow: 0 0 24px rgba(0, 220, 200, 0.35);
+}
+
+/* ---- landing: tighten the oversized splash hero ---- */
+.hero {
+  padding-block: 2.25rem 1.25rem;
+}
+/* let the copy use more width so the title/tagline float on fewer lines */
+.hero .copy {
+  max-inline-size: 48rem;
+  margin-inline: auto;
+}
+.hero h1 {
+  font-size: clamp(1.85rem, 4.2vw, 2.7rem);
+  line-height: 1.14;
+  text-wrap: balance;
+}
+.hero .tagline {
+  font-size: clamp(1rem, 1.9vw, 1.25rem);
+  max-width: 64ch;
+  margin-inline: auto;
+  text-wrap: pretty;
+  color: var(--sl-color-gray-2);
+}
+.hero .actions a {
+  font-size: 0.95rem;
+  padding-block: 0.55rem;
+}
+
+/* ---- landing: wide + long stacked bands (no card grid) ---- */
+.band {
+  width: 100%;
+  max-width: 68rem;
+  margin-inline: auto;
+  padding: 2.25rem 0;
+  border-top: 1px solid var(--sl-color-hairline);
+}
+.band-lead {
+  display: inline-block;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sl-color-text-accent);
+  margin-bottom: 0.6rem;
+}
+.band-title {
+  font-size: clamp(1.25rem, 2.6vw, 1.7rem);
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+.band-desc {
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 62ch;
+  color: var(--sl-color-gray-2);
+  margin: 0;
+}
+.band-desc code {
+  color: var(--sl-color-text-accent);
+}
+
+/* the how-it-works flow: wide horizontal steps, wraps on small screens */
+.flow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.flow-step {
+  flex: 1 1 15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(0, 220, 200, 0.04), transparent);
+}
+.flow-step strong {
+  font-size: 1.02rem;
+  color: var(--sl-color-white);
+}
+.flow-step span {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--sl-color-gray-2);
+}
+.flow-arrow {
+  align-self: center;
+  color: var(--sl-color-text-accent);
+  font-size: 1.4rem;
+  opacity: 0.7;
+}
+@media (max-width: 44rem) {
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* closing CTA band */
+.band--cta {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.band-cta {
+  font-weight: 600;
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 220, 200, 0.4);
+}
+.band-note {
+  font-size: 0.85rem;
+  color: var(--sl-color-gray-3);
+}
+
+/* compact row of doc links */
+.band--links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.band--links a {
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.band--links a:hover {
+  text-decoration: underline;
+}
+.band--intro .band-desc {
+  font-size: 1.1rem;
+  max-width: 68ch;
+  color: var(--sl-color-gray-1);
+}
+/* the in-practice code block sits flush inside its band */
+.band--example :global(.expressive-code),
+.band--example pre {
+  margin-block: 1rem 0;
+}
+
+/* gif beside its explanatory line (the multi-hop footnote sits under the gif) */
+.showcase {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1.75rem;
+  align-items: center;
+}
+.showcase-media { min-width: 0; }
+.showcase-copy .band-title { margin-top: 0; }
+@media (max-width: 46rem) {
+  .showcase { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+/* supporting bullets inside a band (keeps bands dense without bloat) */
+.band-list {
+  margin: 0.85rem 0 0;
+  padding-left: 1.15rem;
+  max-width: 64ch;
+}
+.band-list li {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--sl-color-gray-2);
+  margin-bottom: 0.3rem;
+}
+.band-list li::marker { color: var(--sl-color-text-accent); }
+.band-list code { color: var(--sl-color-text-accent); }
