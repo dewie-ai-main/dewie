@@ -92,7 +92,7 @@ auth = [
 ]
 local = [
     "sentence-transformers>=5.6.0",
-    "llama-cpp-python>=0.3.0",
+    "llama-cpp-python>=0.3.35",
 ]
 all = [
     "dewie[nlp,docs,media,auth,local,podcast]",
