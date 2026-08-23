@@ -29,7 +29,7 @@ dependencies = [
     # API framework
     "fastapi>=0.138.1",
     "mcp>=1.0.0,<2.0.0",  # mcp 2.0 dropped mcp.server.fastmcp (used by our MCP server)
-    "uvicorn[standard]>=0.32.0",
+    "uvicorn[standard]>=0.52.4",
     # Storage: PostgreSQL
     "sqlalchemy[asyncio]>=2.0.51",
     "asyncpg>=0.30.0",
