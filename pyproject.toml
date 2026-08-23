@@ -51,7 +51,7 @@ dependencies = [
   "PyJWT[crypto]>=2.13.0",    # session JWT signing/verification
     "cryptography>=42.0",       # Fernet encryption for server registry API keys at rest
     # Config & validation
-    "pydantic>=2.10.0",
+    "pydantic>=2.13.4",
     "pydantic-settings>=2.7.0",
     "python-dotenv>=1.2.2",
 ]
