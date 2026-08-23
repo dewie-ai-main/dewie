@@ -33,7 +33,7 @@ dependencies = [
     # Storage: PostgreSQL
     "sqlalchemy[asyncio]>=2.0.51",
     "asyncpg>=0.30.0",
-    "aiosqlite>=0.19.0",           # SQLite async dialect for SQLAlchemy (sqlite+aiosqlite:// DSNs)
+    "aiosqlite>=0.22.1",           # SQLite async dialect for SQLAlchemy (sqlite+aiosqlite:// DSNs)
     "alembic>=1.14.0",
     "psycopg2-binary>=2.9.12",    # alembic sync runner (migrations/env.py) needs a sync driver
     # Storage: Redis cache
