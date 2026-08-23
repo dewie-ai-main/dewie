@@ -28,7 +28,7 @@ dependencies = [
     "questionary>=2.1.1",
     # API framework
     "fastapi>=0.138.1",
-    "mcp>=1.0.0,<2.0.0",  # mcp 2.0 dropped mcp.server.fastmcp (used by our MCP server)
+    "mcp>=2.0.0,<3.0.0",  # mcp 2.0 dropped mcp.server.fastmcp (used by our MCP server)
     "uvicorn[standard]>=0.32.0",
     # Storage: PostgreSQL
     "sqlalchemy[asyncio]>=2.0.51",
