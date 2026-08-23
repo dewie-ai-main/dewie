@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.astro/
+# docs pages are synced from ../docs at build time (scripts/sync-docs.mjs)
+src/content/docs/*.md

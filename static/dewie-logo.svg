@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="14" fill="#0a0a0a"/>
+
+  <!-- SEXTANT -->
+  <!-- The frame: two struts meeting at the index pivot (top center) -->
+  <!-- Left strut: pivot → lower-left arc end -->
+  <line x1="50" y1="22" x2="18" y2="72" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Right strut: pivot → lower-right arc end -->
+  <line x1="50" y1="22" x2="82" y2="72" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Base bar connecting the two arc ends -->
+  <line x1="18" y1="72" x2="82" y2="72" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- The limb — graduated arc along the bottom (60° sector) -->
+  <path d="M18 72 A38 38 0 0 1 82 72" fill="none" stroke="#c9a84c" stroke-width="2.8" stroke-linecap="round"/>
+
+  <!-- Tick marks on the arc -->
+  <g stroke="#c9a84c" stroke-linecap="round">
+    <!-- 7 major ticks, evenly spaced along the arc -->
+    <line x1="18" y1="72" x2="20.5" y2="69" stroke-width="1.4"/>
+    <line x1="27" y1="60" x2="29.8" y2="57.8" stroke-width="1.4"/>
+    <line x1="38" y1="52" x2="40.5" y2="49.5" stroke-width="1.4"/>
+    <line x1="50" y1="49" x2="50" y2="46" stroke-width="1.4"/>
+    <line x1="62" y1="52" x2="59.5" y2="49.5" stroke-width="1.4"/>
+    <line x1="73" y1="60" x2="70.2" y2="57.8" stroke-width="1.4"/>
+    <line x1="82" y1="72" x2="79.5" y2="69" stroke-width="1.4"/>
+    <!-- Minor ticks -->
+    <line x1="22.5" y1="66" x2="24.2" y2="64" stroke-width="0.8" opacity="0.7"/>
+    <line x1="32" y1="56" x2="34" y2="54.2" stroke-width="0.8" opacity="0.7"/>
+    <line x1="44" y1="50" x2="44.8" y2="47.5" stroke-width="0.8" opacity="0.7"/>
+    <line x1="56" y1="50" x2="55.2" y2="47.5" stroke-width="0.8" opacity="0.7"/>
+    <line x1="68" y1="56" x2="66" y2="54.2" stroke-width="0.8" opacity="0.7"/>
+    <line x1="77.5" y1="66" x2="75.8" y2="64" stroke-width="0.8" opacity="0.7"/>
+  </g>
+
+  <!-- Index arm — rotated ~30° from vertical, the measuring arm -->
+  <line x1="50" y1="22" x2="73" y2="63" stroke="#e8c84a" stroke-width="2" stroke-linecap="round"/>
+  <!-- Vernier / micrometer drum at the end of index arm -->
+  <circle cx="73" cy="63" r="4" fill="#0a0a0a" stroke="#e8c84a" stroke-width="1.6"/>
+
+  <!-- Telescope barrel — horizontal, attached to left strut -->
+  <rect x="22" y="36" width="26" height="5" rx="2.5" fill="#0a0a0a" stroke="#c9a84c" stroke-width="1.4"/>
+  <!-- Eyepiece cap -->
+  <rect x="20" y="35" width="4" height="7" rx="1.5" fill="#c9a84c"/>
+  <!-- Objective lens end -->
+  <circle cx="48" cy="38.5" r="3.2" fill="#0a0a0a" stroke="#c9a84c" stroke-width="1.2"/>
+
+  <!-- Handle grip at bottom right -->
+  <path d="M78 72 Q88 72 88 82 Q88 90 80 90" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Pivot point -->
+  <circle cx="50" cy="22" r="3" fill="#0a0a0a" stroke="#e8c84a" stroke-width="1.6"/>
+  <circle cx="50" cy="22" r="1.2" fill="#e8c84a"/>
+
+</svg>

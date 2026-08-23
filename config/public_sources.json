@@ -1,0 +1,21 @@
+[
+  {
+    "name": "Local PostgreSQL",
+    "type": "postgres",
+    "config": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "dewie",
+      "_note": "Configure connection credentials via environment variables or setup wizard. Do not hardcode passwords in this file."
+    },
+    "enabled": true
+  },
+  {
+    "name": "Remote Demo Server",
+    "type": "dewie",
+    "config": {
+      "url": "${DEWIE_DEMO_URL:-https://your-demo-server.example.com}"
+    },
+    "enabled": false
+  }
+]

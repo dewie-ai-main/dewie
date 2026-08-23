@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+<script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><circle cx='10' cy='10' r='10' fill='%236366f1'/><path d='M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2 2 0 110 4 2 2 0 010-4zm0 9.5c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z' fill='white'/></svg>" type="image/svg+xml" /><title>Document Review — Dewie</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+    --border: var(--border); --purple: var(--purple);
+    --purple-lo: var(--purple-lo); --green: #22c55e;
+    --red: #ef4444; --yellow: #fbbf24;
+    --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+    --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: 0;
+    background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none;
+  }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(7,7,15,0.9); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+  .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+  .nav-logo-mark { width: 28px; height: 28px; background: var(--purple); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+  .nav-logo-mark svg { width: 15px; height: 15px; fill: #fff; }
+  .nav-logo-text { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; color: var(--text); }
+  .nav-logo-text span { color: var(--purple); }
+  .nav-links { display: flex; align-items: center; gap: 2px; margin: 0 16px; }
+  .nav-link { font-size: 0.82rem; color: var(--dim); text-decoration: none; padding: 5px 12px; border-radius: 6px; transition: all 0.15s; }
+  .nav-link:hover { color: var(--text); background: var(--purple-lo); }
+  .nav-link.active { color: var(--text); background: var(--purple-lo); }
+  .nav-right { display: flex; align-items: center; gap: 14px; }
+  .nav-user { font-size: 0.8rem; color: var(--dim); }
+  .nav-admin { font-size: 0.78rem; color: var(--accent-light); text-decoration: none; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; display: none; }
+  .nav-admin:hover { background: var(--purple-lo); }
+  .btn-signout { font-size: 0.78rem; color: var(--dim); background: none; border: none; cursor: pointer; padding: 4px 8px; font-family: var(--sans); }
+  .btn-signout:hover { color: var(--text); }
+
+  /* PAGE HEADER */
+  .page-header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 12px; }
+  .page-header a { color: var(--dim); text-decoration: none; font-size: 0.82rem; }
+  .page-header a:hover { color: var(--text); }
+  .page-header h1 { font-size: 0.95rem; color: var(--text); font-weight: 600; }
+
+  .search-bar { display: flex; gap: 10px; padding: 14px 24px; background: var(--bg3); border-bottom: 1px solid var(--border); }
+  .search-bar input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 14px; color: var(--text); font-size: 0.875rem; font-family: 'JetBrains Mono', monospace; }
+  .search-bar input:focus { outline: none; border-color: var(--purple); }
+  .search-bar input::placeholder { color: var(--xdim); }
+  .search-bar button { background: var(--purple); color: #fff; border: none; border-radius: 6px; padding: 9px 20px; cursor: pointer; font-weight: 600; font-size: 0.875rem; white-space: nowrap; }
+  .search-bar button:hover { background: var(--purple-dark); }
+
+  /* Single-column layout */
+  .layout { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+  .doc-header { margin-bottom: 20px; }
+  .doc-title { font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 8px; }
+  .doc-meta-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.78rem; color: #6b7280; }
+  .doc-meta-row a { color: var(--purple); text-decoration: none; }
+  .doc-meta-row a:hover { text-decoration: underline; }
+  .status-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+  .status-ready { background: #064e3b; color: #6ee7b7; }
+  .status-pending { background: #1e3a5f; color: #93c5fd; }
+  .status-failed { background: #450a0a; color: #fca5a5; }
+
+  /* Body scroll box */
+  .body-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+  .body-box-header { padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; display: flex; justify-content: space-between; align-items: center; }
+  .body-box-header span { color: var(--xdim); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .body-text { padding: 16px 20px; height: 380px; overflow-y: auto; line-height: 1.8; font-size: 0.875rem; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+  .body-missing { padding: 40px 20px; color: var(--dim); font-style: italic; text-align: center; }
+
+  /* Analysis below */
+  .analysis-pane { background: transparent; }
+
+  .analysis-section { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: var(--bg3); }
+  .analysis-section-header { padding: 14px 20px; font-size: 0.78rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+  .analysis-section-header:hover { color: var(--text); }
+  .analysis-section-body { padding: 0 20px 16px; }
+
+  /* Summary boxes */
+  .summary-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .summary-box-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .summary-box-label.display { color: var(--accent-light); }
+  .summary-box-label.embed { color: #34d399; }
+  .summary-box p { font-size: 0.85rem; line-height: 1.7; color: var(--text); }
+  .summary-char-count { font-size: 0.7rem; color: var(--xdim); margin-top: 6px; }
+
+  /* Enrichment fields */
+  .enrich-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--bg); gap: 12px; }
+  .enrich-row:last-child { border-bottom: none; }
+  .enrich-label { font-size: 0.75rem; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; min-width: 90px; padding-top: 2px; }
+  .enrich-value { font-size: 0.85rem; color: var(--text); text-align: right; max-width: 240px; line-height: 1.4; }
+  .enrich-value code { background: var(--bg2); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.8em; color: var(--accent-light); }
+
+  /* Sentiment bar */
+  .sentiment-wrap { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+  .sent-bar { width: 80px; height: 5px; background: #1f2937; border-radius: 3px; overflow: hidden; }
+  .sent-fill { height: 100%; border-radius: 3px; }
+  .sent-pos { background: #10b981; }
+  .sent-neg { background: #ef4444; }
+  .sent-neu { background: #6b7280; }
+
+  /* Tags */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+  .tag.topic { background: #1e1b4b; color: var(--accent-light); border: 1px solid #312e81; }
+  .tag.keyword { background: #111827; color: #9ca3af; border: 1px solid #1f2937; }
+  .tag.entity { background: #064e3b; color: #6ee7b7; border: 1px solid #065f46; }
+
+  /* Embedding */
+  .embed-yes { color: #6ee7b7; font-size: 0.82rem; }
+  .embed-no { color: #fca5a5; font-size: 0.82rem; }
+
+  /* Cache */
+  .cache-entry { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; font-size: 0.78rem; }
+  .cache-entry .cache-step { color: var(--accent-light); font-weight: 700; font-family: monospace; }
+  .cache-entry .cache-meta { color: var(--dim); margin-top: 3px; }
+
+  /* States */
+  .loading { padding: 80px 40px; text-align: center; color: var(--dim); }
+  .empty-state { padding: 80px 40px; text-align: center; color: var(--dim); max-width: 960px; margin: 0 auto; }
+  .empty-state h2 { color: var(--dim); margin-bottom: 8px; }
+  .error-box { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 16px; color: #fca5a5; margin: 20px auto; max-width: 960px; }
+
+  .collapsed .analysis-section-body { display: none; }
+  .collapse-arrow { font-size: 0.6rem; transition: transform 0.15s; }
+  .collapsed .collapse-arrow { transform: rotate(-90deg); }
+</style>
+<script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link">Query</a>
+      <a href="/ui/corpus.html" class="nav-link">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <a href="/ui/account.html" class="nav-admin" id="nav-account-link" style="display:inline-flex">Account</a>
+      <a href="/ui/admin.html" class="nav-admin" id="nav-admin-link">Admin ↗</a>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <a href="/ui/documents.html">← Catalog</a>
+  <span style="color:#2d3748">|</span>
+  <h1>📋 Document Review</h1>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="doc-id-input" placeholder="Paste document UUID…" />
+  <button onclick="loadDoc()">Load</button>
+</div>
+
+<div class="layout" id="layout">
+  <div class="empty-state">
+    <h2>No document loaded</h2>
+    <p style="font-size:0.85rem;margin-bottom:16px">Paste a document UUID above to review its full body alongside every enrichment field.</p>
+    <p style="font-size:0.78rem;color:#374151">Find IDs: <code style="background:#1a1f2e;padding:2px 8px;border-radius:4px;color:var(--accent-light)">SELECT id, title FROM documents WHERE status='ready' LIMIT 20;</code></p>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+if (params.get('id')) {
+  document.getElementById('doc-id-input').value = params.get('id');
+  window.addEventListener('DOMContentLoaded', loadDoc);
+}
+
+document.getElementById('doc-id-input').addEventListener('keydown', e => { if (e.key === 'Enter') loadDoc(); });
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+
+const API = window._pfx + '/api';
+
+(async function() {
+  try {
+    const res = await fetch(`${API}/auth/me`, {credentials: 'include'});
+    if (!res.ok) {
+      const redirect = '/ui/login.html?redirect=' + encodeURIComponent(location.pathname);
+      if (location.pathname !== '/ui/login.html') location.replace(redirect);
+    }
+  } catch(e) {
+    console && console.error && console.error('auth guard error', e);
+  }
+})();
+
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function loadDoc() {
+  const id = document.getElementById('doc-id-input').value.trim();
+  if (!id) return;
+  history.replaceState({}, '', `?id=${id}`);
+  document.getElementById('layout').innerHTML = '<div class="loading">Loading document…</div>';
+  fetch(`/api/documents/${id}/inspect`)
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(render)
+    .catch(e => {
+      document.getElementById('layout').innerHTML = `<div class="error-box">❌ ${esc(e.message)} — check the UUID</div>`;
+    });
+}
+
+function toggle(el) {
+  el.closest('.analysis-section').classList.toggle('collapsed');
+}
+
+function section(title, body, startOpen=true) {
+  const cls = startOpen ? '' : 'collapsed';
+  return `<div class="analysis-section ${cls}">
+    <div class="analysis-section-header" onclick="toggle(this)">
+      <span>${title}</span><span class="collapse-arrow">▼</span>
+    </div>
+    <div class="analysis-section-body">${body}</div>
+  </div>`;
+}
+
+function render(d) {
+  const status = d.status || 'unknown';
+  const body = d.body?.available ? d.body.full || d.body.preview : null;
+
+  // ── LEFT: document body ───────────────────────────────────────────────
+  const bodyBox = `
+    <div class="doc-header">
+      <div class="doc-title">${esc(d.title || 'Untitled')}</div>
+      <div class="doc-meta-row">
+        <span class="status-badge status-${status}">${status}</span>
+        <span>${esc(d.source || '—')}</span>
+        <span>·</span>
+        <a href="${esc(d.url)}" target="_blank">Source ↗</a>
+        <span>·</span>
+        <span>${d.ingested_at ? new Date(d.ingested_at).toLocaleDateString() : '—'}</span>
+        ${d.has_embedding ? '<span>·</span><span style="color:#6ee7b7">✅ Embedded</span>' : '<span>·</span><span style="color:#fca5a5">❌ Not embedded</span>'}
+      </div>
+    </div>
+    <div class="body-box">
+      <div class="body-box-header">
+        Raw Body <span>${body ? (d.body.chars.toLocaleString() + ' chars — scroll to read') : 'unavailable'}</span>
+      </div>
+      ${body
+        ? `<div class="body-text">${esc(body)}</div>`
+        : `<div class="body-missing">⚠️ Body not in flat-file store — may need backfill</div>`
+      }
+    </div>`;
+
+  // ── RIGHT: analysis pane ──────────────────────────────────────────────
+
+  // Summaries
+  const summaryHTML = `
+    <div class="summary-box">
+      <div class="summary-box-label display">📢 Display Summary — shown to users</div>
+      <p>${esc(d.summary || '—')}</p>
+      <div class="summary-char-count">${(d.summary||'').length} chars</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-box-label embed">🔢 Embed Summary — used for vector search</div>
+      <p>${esc(d.embed_summary || '—')}</p>
+      <div class="summary-char-count">${(d.embed_summary||'').length} chars ${!d.embed_summary ? '— ⚠️ empty, fallback to display summary' : ''}</div>
+    </div>`;
+
+  // Enrichment
+  const sent = d.sentiment;
+  const sentClass = sent > 0.05 ? 'sent-pos' : sent < -0.05 ? 'sent-neg' : 'sent-neu';
+  const sentLabel = sent > 0.05 ? 'positive' : sent < -0.05 ? 'negative' : 'neutral';
+  const sentBar = sent != null ? `
+    <div class="sentiment-wrap">
+      <span style="font-size:0.78rem;color:#6b7280">${sent?.toFixed(2)} ${sentLabel}</span>
+      <div class="sent-bar"><div class="sent-fill ${sentClass}" style="width:${Math.abs(sent)*100}%"></div></div>
+    </div>` : '—';
+
+  const enrichHTML = `
+    <div class="enrich-row">
+      <span class="enrich-label">Doc Type</span>
+      <span class="enrich-value"><code>${esc(d.document_type||'—')}</code></span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Reading Level</span>
+      <span class="enrich-value"><code>${esc(d.reading_level||'—')}</code></span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Quality Score</span>
+      <span class="enrich-value">${
+        d.enrichment_quality_score != null
+          ? `<span style="font-weight:700;color:${d.enrichment_quality_score>=70?'#4ade80':d.enrichment_quality_score>=40?'#facc15':'#f87171'}">${d.enrichment_quality_score}/100</span>`
+          : '<code>—</code>'
+      }</span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Tone</span>
+      <span class="enrich-value"><code>${esc(d.tone||'—')}</code></span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Sentiment</span>
+      <span class="enrich-value">${sentBar}</span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Author</span>
+      <span class="enrich-value">${esc(d.author||'—')}</span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Enrich Ver</span>
+      <span class="enrich-value"><code>${d.enrichment_version ?? '—'}</code></span>
+    </div>`;
+
+  // Topics
+  const topicHTML = (d.topics||[]).map(t => `<span class="tag topic">${esc(t)}</span>`).join('') || '<span style="color:#374151;font-size:0.82rem">none</span>';
+  const kwHTML = (d.keywords||[]).map(k => `<span class="tag keyword">${esc(k)}</span>`).join('') || '<span style="color:#374151;font-size:0.82rem">none</span>';
+  const entHTML = (d.entities||[]).map(e => {
+    const txt = typeof e === 'object' ? `${e.text} <em style="font-size:0.7em;opacity:0.6">${e.label}</em>` : esc(e);
+    return `<span class="tag entity">${txt}</span>`;
+  }).join('') || '<span style="color:#374151;font-size:0.82rem">none</span>';
+  const altHTML = (d.alternate_terms||[]).map(t => `<span class="tag" style="background:#1a2e1a;color:#86efac;border:1px solid #166534">${esc(t)}</span>`).join('')
+    || '<span style="color:#374151;font-size:0.82rem">none (not yet enriched or field not present)</span>';
+
+  const taxonomyHTML = `
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:#4b5563;margin-bottom:6px">Topics</div>
+      <div class="tag-list">${topicHTML}</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:#4b5563;margin-bottom:6px">Keywords</div>
+      <div class="tag-list">${kwHTML}</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:#4b5563;margin-bottom:6px">Named Entities</div>
+      <div class="tag-list">${entHTML}</div>
+    </div>
+    <div>
+      <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:#4b5563;margin-bottom:6px">🔀 Alternate Terms <span style="font-weight:400;color:#374151">(query expansion)</span></div>
+      <div class="tag-list">${altHTML}</div>
+    </div>`;
+
+  // Embedding
+  const embedHTML = `
+    <div class="enrich-row">
+      <span class="enrich-label">Has Vector</span>
+      <span class="enrich-value">${d.has_embedding ? '<span class="embed-yes">✅ Yes</span>' : '<span class="embed-no">❌ No — doc won\'t appear in search</span>'}</span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Model</span>
+      <span class="enrich-value"><code>${esc(d.embedding_model||'—')}</code></span>
+    </div>
+    <div class="enrich-row">
+      <span class="enrich-label">Dimensions</span>
+      <span class="enrich-value">${d.embedding_dims ?? '—'}</span>
+    </div>`;
+
+  // LLM Cache
+  const cacheHTML = (d.llm_cache||[]).length
+    ? d.llm_cache.map(r => `
+        <div class="cache-entry">
+          <span class="cache-step">${esc(r.step)}</span> via <span style="color:#94a3b8">${esc(r.model)}</span>
+          <div class="cache-meta">${r.response_chars.toLocaleString()} char response · ${new Date(r.created_at).toLocaleString()}</div>
+        </div>`).join('')
+    : '<p style="color:#374151;font-size:0.82rem">No cache — LLM will be called on next run</p>';
+
+  // Assemble right pane
+  const analysisPane = `
+    <div class="analysis-pane">
+      ${section('📝 Summaries', summaryHTML, true)}
+      ${section('🏷 Enrichment', enrichHTML, true)}
+      ${section('🗂 Topics & Keywords', taxonomyHTML, true)}
+      ${section('🔢 Embedding', embedHTML, true)}
+      ${section('🗄 LLM Cache', cacheHTML, false)}
+    </div>`;
+
+  document.getElementById('layout').innerHTML = `<div class="layout">${bodyBox}${analysisPane}</div>`;
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+
+async function init() {
+  const me = await fetch(`${API}/auth/me`, {credentials:'include'})
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null);
+
+  if (me && me.authenticated !== false && !me.detail) {
+    if (me.activation_status === 'pending' || me.activation_status === 'rejected') {
+      window.location.href = window._pfx + '/ui/pending.html';
+      return;
+    }
+    document.getElementById('nav-user').textContent = me.email || '';
+    if (me.is_admin) document.getElementById('nav-admin-link').style.display = 'inline-flex';
+  } else {
+    document.getElementById('nav-user').textContent = 'local mode';
+    const signOutBtn = document.querySelector('.btn-signout');
+    if (signOutBtn) signOutBtn.style.display = 'none';
+  }
+}
+
+// ── Sign Out ────────────────────────────────────────────────────────────────
+
+async function signOut() {
+  await fetch(`${API}/auth/logout`, {method:'POST', credentials:'include'}).catch(() => null);
+  window.location.href = window._pfx + '/ui/login.html';
+}
+
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

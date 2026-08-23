@@ -1,0 +1,70 @@
+---
+title: Dewie
+description: Dewie lets your agent remember what it sees and where it goes — a self-hosted knowledge base for AI agents that runs locally, no API key.
+template: splash
+hero:
+  title: Dewie lets your agent remember what it sees and where it goes
+  tagline: Dewie works how and where you want. No GPU or LLM required. Ingest and search on any machine out of the box, or add LLM enrichment to improve knowledge and search.
+  actions:
+    - text: View on GitHub
+      link: https://github.com/dewie-ai-main/dewie
+      icon: external
+      variant: primary
+---
+
+import FeatureTabs from "../../components/FeatureTabs.astro";
+
+<section class="band band--flow" style="border-top:none;">
+  <span class="band-lead">How it works</span>
+  <div class="flow">
+    <div class="flow-step">
+      <strong>Your agent works</strong>
+      <span>It fetches a site, file, or document to do a task.</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <strong>Dewie reads it too</strong>
+      <span>The same document is enriched and added to your corpus.</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <strong>Every future search sees it</strong>
+      <span>The agent finds documents it has already read — no re-fetching.</span>
+    </div>
+  </div>
+</section>
+
+<section class="band band--intro">
+  <span class="band-lead">What is Dewie</span>
+  <p class="band-desc">
+    Dewie is a <strong>self-hosted knowledge base for your AI agents</strong>. Feed it web
+    pages, PDFs, feeds, or files, and it reads and organizes each one automatically. Your
+    agent can then search everything it has collected — and follow the links between
+    documents — through a simple API or MCP. Runs locally, no API key required.
+  </p>
+</section>
+
+<FeatureTabs exploreGif={true} />
+
+<section class="band band--example">
+  <span class="band-lead">Quickstart</span>
+  <h2 class="band-title">Running locally, three commands</h2>
+  <p class="band-desc">No API key, no config — a fresh install embeds its own model in-process.</p>
+
+```bash
+pip install "dewie[local]"
+dewie setup
+dewie serve      # REST API + MCP server on http://localhost:10946
+```
+
+  <p class="band-desc" style="margin-top:0.7rem; font-size:0.92rem;">
+    Driven by a CLI and MCP, so your agent can set it up too — not just query it.
+  </p>
+</section>
+
+<section class="band band--links">
+  <a href="./quickstart/">Quickstart →</a>
+  <a href="./mcp-tools/">MCP tools →</a>
+  <a href="./configuration/">Configuration →</a>
+  <a href="./deployment/">Deployment →</a>
+</section>

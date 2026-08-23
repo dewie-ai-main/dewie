@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dewie — Corpus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
+    }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(7,7,15,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo-mark { width: 28px; height: 28px; background: var(--purple); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .nav-logo-mark svg { width: 15px; height: 15px; fill: #fff; }
+    .nav-logo-text { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; color: var(--text); }
+    .nav-logo-text span { color: var(--purple); }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link { font-size: 0.82rem; color: var(--dim); text-decoration: none; padding: 5px 12px; border-radius: 6px; transition: all 0.15s; }
+    .nav-link:hover { color: var(--text); background: var(--purple-lo); }
+    .nav-link.active { color: var(--text); background: var(--purple-lo); }
+    .nav-right { display: flex; align-items: center; gap: 12px; font-size: 0.78rem; color: var(--dim); }
+    .nav-user { font-size: 0.8rem; color: var(--dim); }
+    .nav-admin { display: none; font-size: 0.78rem; color: var(--purple); text-decoration: none; padding: 3px 9px; border: 1px solid var(--border); border-radius: 5px; }
+    .nav-admin:hover { background: var(--purple-lo); }
+    .btn-signout { font-size: 0.78rem; color: var(--dim); background: none; border: none; cursor: pointer; padding: 4px 8px; font-family: var(--sans); }
+    .btn-signout:hover { color: var(--text); }
+
+    /* LAYOUT */
+    .content { position: relative; z-index: 1; flex: 1; padding: 28px 24px 60px; max-width: 1200px; width: 100%; margin: 0 auto; }
+
+    /* SELECTOR ROW */
+    .selector-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .selector-group { display: flex; align-items: center; gap: 8px; }
+    .selector-label { font-size: 0.72rem; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); white-space: nowrap; }
+    .selector-arrow { color: var(--dim); font-size: 0.75rem; opacity: 0.5; }
+    .source-select {
+      min-width: 180px; max-width: 320px;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--mono); font-size: 0.82rem;
+      padding: 8px 32px 8px 14px; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .source-select:focus { outline: none; border-color: var(--purple); }
+    .source-select:disabled { opacity: 0.4; cursor: not-allowed; }
+    .load-btn {
+      background: var(--purple); color: #fff; border: none; border-radius: 7px;
+      font-family: var(--mono); font-size: 0.8rem; font-weight: 500;
+      padding: 8px 18px; cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .load-btn:hover { opacity: 0.85; }
+    .load-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .source-count { font-size: 0.72rem; color: var(--dim); font-family: var(--mono); }
+
+    /* ERROR BANNER */
+    .error-banner { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 14px 18px; color: #fca5a5; font-size: 0.875rem; margin-bottom: 20px; display: none; }
+    .error-banner.visible { display: block; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 80px 24px; color: var(--dim); }
+    .empty-state .es-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .empty-state .es-title { font-size: 1rem; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+    .empty-state .es-body { font-size: 0.85rem; }
+
+    /* SKELETON */
+    .skeleton { background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; border: 1px solid var(--border); }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skel-card { height: 88px; }
+    .skel-chart { height: 260px; }
+
+    /* STAT CARDS */
+    .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .stat-cards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .stat-cards { grid-template-columns: 1fr; } }
+    .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .stat-card .sc-label { font-size: 0.65rem; font-family: var(--mono); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 8px; }
+    .stat-card .sc-value { font-size: 1.75rem; font-weight: 700; line-height: 1; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--purple); }
+    .stat-card .sc-value.green  { color: #22c55e; }
+    .stat-card .sc-value.yellow { color: #fbbf24; }
+    .stat-card .sc-value.red    { color: #ef4444; }
+    .stat-card .sc-sub { font-size: 0.72rem; color: var(--dim); margin-top: 5px; }
+
+    /* CHARTS ROW */
+    .charts-row { display: grid; grid-template-columns: 220px 220px 1fr; gap: 12px; margin-bottom: 20px; align-items: start; }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .charts-row { grid-template-columns: 1fr; } }
+
+    /* CARD */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .card-header { padding: 10px 18px; background: rgba(17,17,32,0.7); border-bottom: 1px solid var(--border); font-size: 0.68rem; font-family: var(--mono); font-weight: 500; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
+    .card-body { padding: 16px 18px; }
+    .chart-wrap { position: relative; display: flex; justify-content: center; align-items: center; }
+    .donut-wrap { height: 180px; }
+    .bar-wrap { height: 220px; }
+
+    /* LEGEND */
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; justify-content: center; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--dim); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* SOURCE TABLE */
+    .tbl-wrap { overflow-x: auto; }
+    table.source-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    table.source-table th { text-align: left; padding: 9px 14px; font-size: 0.65rem; font-family: var(--mono); font-weight: 500; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    table.source-table th:not(:first-child) { text-align: right; }
+    table.source-table td { padding: 10px 14px; border-bottom: 1px solid var(--purple-lo); vertical-align: middle; font-variant-numeric: tabular-nums; }
+    table.source-table td:not(:first-child) { text-align: right; }
+    table.source-table tr:last-child td { border-bottom: none; }
+    table.source-table tr:hover td { background: var(--purple-lo); }
+    .td-source { font-size: 0.78rem; color: var(--dim); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left !important; cursor: pointer; }
+    .td-source:hover { color: var(--purple); }
+    .td-ready   { color: #4ade80; font-weight: 500; }
+    .td-pending { color: #facc15; }
+    .td-failed  { color: #f87171; }
+
+    /* QUALITY BAR */
+    .q-bar-wrap { min-width: 80px; background: var(--bg3); border-radius: 4px; height: 8px; overflow: hidden; border: 1px solid var(--border); display: inline-block; width: 100%; max-width: 100px; vertical-align: middle; }
+    .q-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+    .q-score-lbl { font-size: 0.72rem; font-family: var(--mono); margin-left: 6px; }
+  </style>
+  <script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark">
+        <svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg>
+      </div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link">Query</a>
+      <a href="/ui/corpus.html" class="nav-link active">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <a href="/ui/account.html" class="nav-admin" id="nav-account-link" style="display:inline-flex">Account</a>
+      <a href="/ui/admin.html" class="nav-admin" id="nav-admin-link">Admin ↗</a>
+      <button class="btn-signout" id="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="content">
+  <!-- Catalog → Type → Source selector -->
+  <div class="selector-row">
+    <div class="selector-group">
+      <span class="selector-label">Catalog</span>
+      <select class="source-select" id="catalog-select" disabled onchange="onCatalogChange()">
+        <option value="">Loading…</option>
+      </select>
+    </div>
+    <span class="selector-arrow">›</span>
+    <div class="selector-group">
+      <span class="selector-label">Type</span>
+      <select class="source-select" id="doc-type-select">
+        <option value="">All types</option>
+      </select>
+    </div>
+    <div class="selector-group">
+      <span class="selector-label">Type</span>
+      <select class="source-select" id="doc-type-select">
+        <option value="">All types</option>
+      </select>
+    </div>
+    <span class="selector-arrow">›</span>
+    <button class="load-btn" id="load-btn" disabled onclick="loadQuality()">Load</button>
+    <span class="source-count" id="source-count"></span>
+  </div>
+
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- Empty / prompt state -->
+  <div class="empty-state" id="empty-state">
+    <div class="es-icon">📊</div>
+    <div class="es-title">Select a catalog and source to view corpus quality</div>
+    <div class="es-body">Pick a catalog (Local or a registered source), then optionally filter by document source domain.</div>
+  </div>
+
+  <!-- Stats (hidden until loaded) -->
+  <div id="stats-section" style="display:none">
+    <div class="stat-cards" id="stat-cards"></div>
+    <div class="charts-row" id="charts-row"></div>
+    <div class="card" id="table-card">
+      <div class="card-header" id="table-header">By source</div>
+      <div class="tbl-wrap">
+        <table class="source-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Ready</th>
+              <th>Pending</th>
+              <th>Failed</th>
+              <th>Avg Summary Len</th>
+              <th>Avg AQs</th>
+              <th>Quality</th>
+            </tr>
+          </thead>
+          <tbody id="source-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = {
+  high:    '#22c55e',
+  medium:  '#f59e0b',
+  low:     '#f97316',
+  stub:    '#ef4444',
+  ready:   '#4ade80',
+  pending: '#facc15',
+  failed:  '#f87171',
+};
+
+let statusChart = null;
+let qualityChart = null;
+let sourceChart = null;
+
+function fmt(n) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString();
+}
+
+function qualityColor(score) {
+  if (score == null) return '#4b5563';
+  if (score >= 70) return COLORS.high;
+  if (score >= 40) return COLORS.medium;
+  if (score >= 1)  return COLORS.low;
+  return COLORS.stub;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function hideError() {
+  document.getElementById('error-banner').classList.remove('visible');
+}
+
+async function loadCatalogs() {
+  const catSel = document.getElementById('catalog-select');
+  try {
+    const res = await fetch(window._pfx + '/api/sources', {credentials: 'include'});
+    const catalogs = res.ok ? await res.json() : [];
+
+    catSel.innerHTML = '<option value="__local__">Local</option>';
+    catalogs.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.dataset.name = c.name;
+      opt.dataset.type = c.type;
+      opt.textContent = `${c.name}  [${c.type}]`;
+      catSel.appendChild(opt);
+    });
+    catSel.disabled = false;
+    document.getElementById('load-btn').disabled = false;
+    await onCatalogChange();
+    await loadDocTypes();
+  } catch (err) {
+    showError('Failed to load catalogs: ' + err.message);
+    catSel.innerHTML = '<option value="__local__">Local</option>';
+    catSel.disabled = false;
+    document.getElementById('load-btn').disabled = false;
+    await onCatalogChange();
+    await loadDocTypes();
+  }
+}
+
+async function loadDocTypes(catalogId = null) {
+  const typeSel = document.getElementById('doc-type-select');
+  try {
+    let url = window._pfx + '/api/corpus/doc-types';
+    if (catalogId && catalogId !== '__local__') {
+      url += '?catalog_id=' + encodeURIComponent(catalogId);
+    }
+    const res = await fetch(url, {credentials: 'include'});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const types = await res.json();
+    typeSel.innerHTML = '<option value="">All types</option>';
+    types.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      typeSel.appendChild(opt);
+    });
+  } catch (err) {
+    showError('Failed to load types: ' + err.message);
+  }
+}
+
+async function onCatalogChange() {
+  const catSel = document.getElementById('catalog-select');
+  const srcSel = document.getElementById('source-select');
+  const typeSel = document.getElementById('doc-type-select');
+  const isLocal = catSel.value === '__local__';
+
+  srcSel.innerHTML = '<option value="">All sources</option>';
+  srcSel.disabled = true;
+  document.getElementById('source-count').textContent = '';
+
+  if (isLocal) {
+    try {
+      const res = await fetch(window._pfx + '/api/corpus/sources', {credentials: 'include'});
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const sources = await res.json();
+      sources.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.source;
+        opt.textContent = `${s.source}  (${fmt(s.total)} docs)`;
+        srcSel.appendChild(opt);
+      });
+      srcSel.disabled = false;
+      document.getElementById('source-count').textContent =
+        `${sources.length} source${sources.length !== 1 ? 's' : ''}`;
+    } catch (err) {
+      showError('Failed to load sources: ' + err.message);
+    }
+  }
+  // For remote catalogs, source dropdown stays as "All sources" only
+  await loadDocTypes(catSel.value);
+}
+
+async function loadQuality() {
+  const catSel = document.getElementById('catalog-select');
+  const typeSel = document.getElementById('doc-type-select');
+  const source = document.getElementById('source-select').value;
+  const isLocal = catSel.value === '__local__';
+  const catalogId = isLocal ? null : catSel.value;
+  const docType = typeSel.value;
+  const btn = document.getElementById('load-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  hideError();
+
+  try {
+    let url = '/api/corpus/quality';
+    const params = [];
+    if (docType) params.push(`doc_type=${encodeURIComponent(docType)}`);
+    if (source) params.push(`source=${encodeURIComponent(source)}`);
+    if (catalogId) params.push(`catalog_id=${encodeURIComponent(catalogId)}`);
+    if (params.length) url += '?' + params.join('&');
+
+    const res = await fetch(url, {credentials: 'include'});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('stats-section').style.display = '';
+
+    renderStatCards(data.summary);
+    renderCharts(data);
+    renderTable(data.by_source, !!source);
+
+    const catName = isLocal ? 'Local' : (catSel.selectedOptions[0]?.dataset.name ?? catSel.value);
+    const header = document.getElementById('table-header');
+    header.textContent = source
+      ? `Sources within "${source}" — ${catName}`
+      : `By source — ${catName}`;
+  } catch (err) {
+    showError('Failed to load corpus quality: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Load';
+  }
+}
+
+function renderStatCards(s) {
+  const readyPct = s.total > 0 ? (s.ready / s.total * 100).toFixed(1) : 0;
+  const qualScore = s.embed_summary_good != null && s.ready > 0
+    ? (s.embed_summary_good / s.ready * 100).toFixed(1)
+    : 0;
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card">
+      <div class="sc-label">Total Docs</div>
+      <div class="sc-value">${fmt(s.total)}</div>
+      <div class="sc-sub">${fmt(s.pending)} pending · ${fmt(s.failed)} failed</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Ready</div>
+      <div class="sc-value green">${fmt(s.ready)}</div>
+      <div class="sc-sub">${readyPct}% of corpus</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Enrichment Coverage</div>
+      <div class="sc-value ${qualScore >= 70 ? 'green' : qualScore >= 40 ? 'yellow' : 'red'}">${qualScore}%</div>
+      <div class="sc-sub">avg body ${fmt(s.avg_body_len)} chars · avg AQs ${s.avg_aqs ?? '—'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">With Embeddings</div>
+      <div class="sc-value">${fmt(s.with_embedding)}</div>
+      <div class="sc-sub">avg summary ${fmt(s.avg_embed_summary_len)} chars</div>
+    </div>
+  `;
+}
+
+function renderCharts(data) {
+  const s = data.summary;
+  const q = data.quality_distribution;
+  const top = (data.by_source || []).slice(0, 12);
+
+  document.getElementById('charts-row').innerHTML = `
+    <div class="card">
+      <div class="card-header">Status</div>
+      <div class="card-body">
+        <div class="chart-wrap donut-wrap"><canvas id="status-donut"></canvas></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:${COLORS.ready}"></div>Ready</div>
+          <div class="legend-item"><div class="legend-dot" style="background:${COLORS.pending}"></div>Pending</div>
+          <div class="legend-item"><div class="legend-dot" style="background:${COLORS.failed}"></div>Failed</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Quality tiers</div>
+      <div class="card-body">
+        <div class="chart-wrap donut-wrap"><canvas id="quality-donut"></canvas></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:${COLORS.high}"></div>High</div>
+          <div class="legend-item"><div class="legend-dot" style="background:${COLORS.medium}"></div>Medium</div>
+          <div class="legend-item"><div class="legend-dot" style="background:${COLORS.low}"></div>Low</div>
+          <div class="legend-item"><div class="legend-dot" style="background:${COLORS.stub}"></div>Stub</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Top sources by ready docs</div>
+      <div class="card-body">
+        <div class="chart-wrap bar-wrap"><canvas id="source-bar"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  if (statusChart) statusChart.destroy();
+  statusChart = new Chart(document.getElementById('status-donut').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Ready', 'Pending', 'Failed'],
+      datasets: [{ data: [s.ready, s.pending, s.failed], backgroundColor: [COLORS.ready, COLORS.pending, COLORS.failed], borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: { cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.raw)}` } } }, animation: { duration: 400 } },
+  });
+
+  if (qualityChart) qualityChart.destroy();
+  qualityChart = new Chart(document.getElementById('quality-donut').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['High', 'Medium', 'Low', 'Stub'],
+      datasets: [{ data: [q.high, q.medium, q.low, q.stub], backgroundColor: [COLORS.high, COLORS.medium, COLORS.low, COLORS.stub], borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: { cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.raw)}` } } }, animation: { duration: 400 } },
+  });
+
+  if (top.length > 0) {
+    const labels = top.map(s => { const n = s.source.replace(/^https?:\/\//, ''); return n.length > 22 ? n.slice(0,20)+'…' : n; });
+    if (sourceChart) sourceChart.destroy();
+    sourceChart = new Chart(document.getElementById('source-bar').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: 'Ready docs', data: top.map(s => s.ready), backgroundColor: top.map(s => qualityColor(s.quality_score)), borderRadius: 3 }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${fmt(c.raw)} ready` } } },
+        scales: {
+          x: { grid: { color: 'rgba(99,102,241,0.08)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+          y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+        },
+        animation: { duration: 400 },
+      }
+    });
+  }
+}
+
+function renderTable(sources, singleSource) {
+  const tbody = document.getElementById('source-tbody');
+  if (!sources || sources.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:24px">No data</td></tr>';
+    return;
+  }
+  tbody.innerHTML = sources.map(s => {
+    const score = s.quality_score ?? null;
+    const color = qualityColor(score);
+    const pct = score != null ? Math.min(100, Math.max(0, score)) : 0;
+    return `
+      <tr>
+        <td class="td-source" title="${s.source}" onclick="drillSource('${s.source.replace(/'/g,"\\'")}')">
+          ${s.source}
+        </td>
+        <td class="td-ready">${fmt(s.ready)}</td>
+        <td class="td-pending">${fmt(s.pending)}</td>
+        <td class="td-failed">${fmt(s.failed)}</td>
+        <td>${fmt(s.avg_embed_summary_len)}</td>
+        <td>${s.avg_aqs ?? '—'}</td>
+        <td>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">
+            <div class="q-bar-wrap"><div class="q-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+            <span class="q-score-lbl" style="color:${color}">${score != null ? score : '—'}</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function drillSource(source) {
+  const catSel = document.getElementById('catalog-select');
+  if (catSel.value !== '__local__') return; // only local sources are drillable
+  const sel = document.getElementById('source-select');
+  for (const opt of sel.options) {
+    if (opt.value === source) { sel.value = source; break; }
+  }
+  loadQuality();
+}
+
+// Allow hitting Enter in either dropdown to load
+document.getElementById('source-select').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadQuality();
+});
+document.getElementById('catalog-select').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadQuality();
+});
+
+async function signOut() {
+  await fetch(window._pfx + '/api/auth/logout', {method:'POST', credentials:'include'}).catch(() => null);
+  window.location.href = window._pfx + '/ui/login.html';
+}
+
+(async () => {
+  await loadCatalogs();
+  try {
+    const me = await fetch(window._pfx + '/api/auth/me', {credentials:'include'}).then(r => r.ok ? r.json() : null);
+    if (me && me.authenticated !== false && !me.detail) {
+      document.getElementById('nav-user').textContent = me.email || '';
+      if (me.is_admin) document.getElementById('nav-admin-link').style.display = 'inline-flex';
+    } else {
+      document.getElementById('nav-user').textContent = 'local mode';
+      const signOutBtn = document.getElementById('btn-signout');
+      if (signOutBtn) signOutBtn.style.display = 'none';
+    }
+  } catch (_) {}
+})();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

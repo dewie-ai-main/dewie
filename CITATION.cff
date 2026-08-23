@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+title: "Dewie: Agent-Native Retrieval Framework for Private Corpora"
+type: software
+authors:
+  - family-names: Atkins
+    given-names: Alexander
+    affiliation: Dewie AI
+repository: https://github.com/dewie-ai-main/dewie
+homepage: https://dewie.ai
+license: FSL-1.1-ALv2
+version: 0.1.0
+date-released: 2026-07-29

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dewie Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .badge { @apply inline-block px-2 py-0.5 rounded text-xs font-medium; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen font-mono">
+
+<nav class="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center gap-4">
+  <span class="text-indigo-400 font-bold text-lg tracking-wide">Dewie</span>
+  <span class="text-gray-500 text-sm">dashboard</span>
+  <a href="/ui/ingest-status" class="text-xs text-gray-400 hover:text-white">Ingest Status</a>
+  <a href="/ui/mcp-config" class="text-xs text-gray-400 hover:text-white">MCP Setup</a>
+  <a href="/ui/status" class="text-xs text-gray-400 hover:text-white">Service Status</a>
+  <button onclick="refresh()" class="ml-auto text-xs text-gray-400 hover:text-white border border-gray-700 rounded px-3 py-1">↻ Refresh</button>
+</nav>
+
+<main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+
+  <!-- Stats row -->
+  <section>
+    <h2 class="text-xs uppercase tracking-widest text-gray-500 mb-3">Overview</h2>
+    <div id="stats-row" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-gray-900 rounded-lg p-4 border border-gray-800 animate-pulse h-20"></div>
+      <div class="bg-gray-900 rounded-lg p-4 border border-gray-800 animate-pulse h-20"></div>
+      <div class="bg-gray-900 rounded-lg p-4 border border-gray-800 animate-pulse h-20"></div>
+      <div class="bg-gray-900 rounded-lg p-4 border border-gray-800 animate-pulse h-20"></div>
+    </div>
+  </section>
+
+  <!-- Ingestion tools -->
+  <section>
+    <h2 class="text-xs uppercase tracking-widest text-gray-500 mb-3">Ingestion by Tool</h2>
+    <div id="tool-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4"></div>
+    <div id="tool-errors" class="hidden overflow-x-auto rounded-lg border border-gray-800">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-900 text-gray-400 text-xs uppercase">
+          <tr>
+            <th class="px-4 py-3 text-left">Tool</th>
+            <th class="px-4 py-3 text-left">Step</th>
+            <th class="px-4 py-3 text-left">Error type</th>
+            <th class="px-4 py-3 text-right">Count</th>
+          </tr>
+        </thead>
+        <tbody id="tool-error-body" class="divide-y divide-gray-800"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Crawl sessions -->
+  <section id="sessions-section" class="hidden">
+    <h2 class="text-xs uppercase tracking-widest text-gray-500 mb-3">Crawl Sessions</h2>
+    <div class="overflow-x-auto rounded-lg border border-gray-800">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-900 text-gray-400 text-xs uppercase">
+          <tr>
+            <th class="px-4 py-3 text-left">Session UUID</th>
+            <th class="px-4 py-3 text-right">Total</th>
+            <th class="px-4 py-3 text-right">Ready</th>
+            <th class="px-4 py-3 text-right">Processing</th>
+            <th class="px-4 py-3 text-right">Failed</th>
+            <th class="px-4 py-3 text-left">Started</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-body" class="divide-y divide-gray-800"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Documents -->
+  <section>
+    <div class="flex items-center gap-4 mb-3">
+      <h2 class="text-xs uppercase tracking-widest text-gray-500">Catalog</h2>
+      <input id="doc-filter" type="text" placeholder="Filter by title / URL / source…"
+             oninput="filterDocs()"
+             class="ml-auto bg-gray-900 border border-gray-700 rounded px-3 py-1 text-sm text-gray-200 placeholder-gray-600 w-72 focus:outline-none focus:border-indigo-500" />
+    </div>
+    <div class="overflow-x-auto rounded-lg border border-gray-800">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-900 text-gray-400 text-xs uppercase">
+          <tr>
+            <th class="px-4 py-3 text-left">Title / URL</th>
+            <th class="px-4 py-3 text-left">Source</th>
+            <th class="px-4 py-3 text-left">Status</th>
+            <th class="px-4 py-3 text-left">Topics</th>
+            <th class="px-4 py-3 text-right">Sentiment</th>
+            <th class="px-4 py-3 text-left">Ingested</th>
+          </tr>
+        </thead>
+        <tbody id="docs-body" class="divide-y divide-gray-800">
+          <tr><td colspan="6" class="px-4 py-6 text-center text-gray-600">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="flex justify-between items-center mt-3 text-xs text-gray-600">
+      <span id="doc-count"></span>
+      <div class="flex gap-2">
+        <button id="btn-prev" onclick="prevPage()" disabled
+          class="px-3 py-1 border border-gray-700 rounded disabled:opacity-30 hover:border-gray-500">← Prev</button>
+        <button id="btn-next" onclick="nextPage()"
+          class="px-3 py-1 border border-gray-700 rounded disabled:opacity-30 hover:border-gray-500">Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Query tester -->
+  <section>
+    <h2 class="text-xs uppercase tracking-widest text-gray-500 mb-3">Try a Query</h2>
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 space-y-3">
+      <div class="flex gap-3">
+        <input id="q-input" type="text" placeholder="Search term…"
+               class="flex-1 bg-gray-950 border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+               onkeydown="if(event.key==='Enter') runQuery()" />
+        <select id="q-expand" class="bg-gray-950 border border-gray-700 rounded px-3 py-2 text-sm">
+          <option value="topics">topics</option>
+          <option value="entities">entities</option>
+          <option value="keywords">keywords</option>
+          <option value="semantic">semantic</option>
+        </select>
+        <input id="q-limit" type="number" value="5" min="1" max="20"
+               class="w-20 bg-gray-950 border border-gray-700 rounded px-3 py-2 text-sm" />
+        <button onclick="runQuery()"
+          class="bg-indigo-600 hover:bg-indigo-500 rounded px-4 py-2 text-sm font-semibold">Search</button>
+      </div>
+      <pre id="q-result" class="text-xs text-gray-400 whitespace-pre-wrap max-h-96 overflow-auto hidden bg-gray-950 rounded p-3"></pre>
+    </div>
+  </section>
+
+</main>
+
+<script src="/ui/dashboard.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

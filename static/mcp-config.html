@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dewie — MCP Setup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1117; color: #e6edf3; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+    nav { background: #161b22; border-bottom: 1px solid #21262d; padding: 12px 24px; display: flex; align-items: center; gap: 16px; }
+    nav .logo { color: #58a6ff; font-weight: 700; font-size: 16px; letter-spacing: 0.05em; }
+    nav .sub { color: #8b949e; font-size: 12px; }
+    nav a { color: #8b949e; font-size: 12px; text-decoration: none; }
+    nav a:hover { color: #e6edf3; }
+    nav .spacer { flex: 1; }
+    main { max-width: 860px; margin: 0 auto; padding: 32px 24px; }
+    h1 { font-size: 20px; color: #e6edf3; margin-bottom: 6px; }
+    .subtitle { color: #8b949e; font-size: 12px; margin-bottom: 32px; }
+    .section { margin-bottom: 36px; }
+    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #8b949e; margin-bottom: 12px; }
+    label { display: block; font-size: 11px; color: #8b949e; margin-bottom: 6px; }
+    input[type=text] { width: 100%; background: #161b22; border: 1px solid #30363d; color: #e6edf3; padding: 8px 12px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none; }
+    input[type=text]:focus { border-color: #58a6ff; }
+    .code-block { position: relative; background: #161b22; border: 1px solid #21262d; border-radius: 8px; overflow: hidden; margin-top: 8px; }
+    .code-block pre { padding: 16px; overflow-x: auto; white-space: pre; line-height: 1.6; color: #e6edf3; font-size: 12px; }
+    .code-block .copy-btn { position: absolute; top: 8px; right: 8px; background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 3px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-family: inherit; }
+    .code-block .copy-btn:hover { background: #30363d; color: #e6edf3; }
+    .copy-btn.copied { color: #3fb950 !important; border-color: #3fb950 !important; }
+    .download-btn { display: inline-block; margin-top: 12px; background: #1c2d4a; border: 1px solid #1f6feb; color: #58a6ff; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; text-decoration: none; }
+    .download-btn:hover { background: #1f6feb; color: #fff; }
+    .badge-note { display: inline-block; background: #1c2d4a; color: #58a6ff; padding: 2px 8px; border-radius: 12px; font-size: 10px; margin-left: 8px; vertical-align: middle; }
+    .divider { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
+    .step { display: flex; gap: 12px; margin-bottom: 16px; }
+    .step-num { flex-shrink: 0; width: 22px; height: 22px; background: #1c2d4a; color: #58a6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+    .step-body { flex: 1; padding-top: 2px; }
+    .step-body p { color: #8b949e; font-size: 12px; line-height: 1.6; }
+    .step-body strong { color: #e6edf3; }
+    .tag { display: inline-block; background: #161b22; border: 1px solid #21262d; border-radius: 4px; padding: 1px 6px; font-size: 11px; color: #bc8cff; }
+  </style>
+</head>
+<body>
+<nav>
+  <span class="logo">Dewie</span>
+  <span class="sub">MCP Setup</span>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/ui/ingest-status">Ingest Status</a>
+  <a href="/ui/status">Service Status</a>
+  <span class="spacer"></span>
+</nav>
+
+<main>
+  <h1>Model Context Protocol Setup</h1>
+  <p class="subtitle">Connect any MCP-compatible client (Claude Desktop, Cursor, Zed) directly to your Dewie corpus.</p>
+
+  <!-- API URL + key override -->
+  <div class="section">
+    <div class="section-title">1. Your Dewie API URL &amp; key</div>
+    <label for="api-url">Detected from your request — edit if needed (e.g. for Docker/remote deployments)</label>
+    <input type="text" id="api-url" value="__API_URL__" oninput="update()"/>
+    <label for="api-key" style="margin-top:12px">Your Dewie API key (from the Admin → API Keys page)</label>
+    <input type="text" id="api-key" placeholder="ck_live_..." oninput="update()"/>
+  </div>
+
+  <!-- Claude Desktop / stdio -->
+  <div class="section">
+    <div class="section-title">2. Claude Desktop &amp; stdio clients <span class="badge-note">recommended</span></div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body"><p>Copy the config below and merge it into your <strong>claude_desktop_config.json</strong>
+        <br>macOS: <span class="tag">~/Library/Application Support/Claude/claude_desktop_config.json</span>
+        <br>Windows: <span class="tag">%APPDATA%\\Claude\\claude_desktop_config.json</span></p>
+      </div>
+    </div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyBlock('cfg-stdio', this)">Copy</button>
+      <pre id="cfg-stdio"></pre>
+    </div>
+    <button class="download-btn" onclick="downloadConfig()">⬇ Download claude_desktop_config.json</button>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- Streamable HTTP / remote -->
+  <div class="section">
+    <div class="section-title">3. Remote / HTTP clients (OpenClaw, hosted) <span class="badge-note">no local Python needed</span></div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body"><p>Dewie speaks MCP's Streamable HTTP transport directly — point any compliant remote client at this URL with your API key as a Bearer token. No separate process to run.</p></div>
+    </div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyBlock('cfg-stream-url', this)">Copy</button>
+      <pre id="cfg-stream-url"></pre>
+    </div>
+    <div class="step" style="margin-top:16px">
+      <div class="step-num">2</div>
+      <div class="step-body"><p>Example: registering it with the <span class="tag">openclaw</span> CLI:</p></div>
+    </div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyBlock('cfg-openclaw', this)">Copy</button>
+      <pre id="cfg-openclaw"></pre>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- Tools reference -->
+  <div class="section">
+    <div class="section-title">4. Available tools</div>
+    <p style="color:#8b949e;font-size:12px;margin-bottom:8px">The stdio config (section 2) and the remote Streamable HTTP URL (section 3) expose <strong>different tool names</strong> for the same underlying capabilities — both are valid, used independently.</p>
+    <div class="code-block">
+      <pre style="color:#8b949e">Remote (Streamable HTTP, section 3):
+  search_corpus, ingest_url, dewie_ingest, expand, read, intersect,
+  bridge, browse, research, web_search, add_catalog, list_sources,
+  list_catalogs, dewie_fetch
+
+stdio (Claude Desktop, section 2):
+  dewie_search, dewie_expand, dewie_read, dewie_intersect, dewie_bridge,
+  dewie_browse, dewie_research, dewie_fetch, dewie_ingest</pre>
+    </div>
+  </div>
+</main>
+
+<script>
+function getApiUrl() {
+  return document.getElementById('api-url').value.trim().replace(/\/$/, '');
+}
+
+function getApiKey() {
+  return document.getElementById('api-key').value.trim();
+}
+
+function stdioConfig(apiUrl, apiKey) {
+  return JSON.stringify({
+    mcpServers: {
+      dewie: {
+        command: "python",
+        args: ["scripts/mcp_server.py"],
+        env: { DEWIE_API_URL: apiUrl, DEWIE_API_KEY: apiKey || "<your-api-key>" }
+      }
+    }
+  }, null, 2);
+}
+
+function update() {
+  const apiUrl = getApiUrl();
+  const apiKey = getApiKey();
+  document.getElementById('cfg-stdio').textContent = stdioConfig(apiUrl, apiKey);
+  document.getElementById('cfg-stream-url').textContent =
+    apiUrl + '/api/mcp-stream/mcp\nAuthorization: Bearer ' + (apiKey || '<your-api-key>');
+  document.getElementById('cfg-openclaw').textContent =
+    'openclaw mcp add dewie --url ' + apiUrl + '/api/mcp-stream/mcp \\\n' +
+    '  --transport streamable-http \\\n' +
+    '  --header "Authorization: Bearer ' + (apiKey || '<your-api-key>') + '"';
+}
+
+function copyBlock(id, btn) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function downloadConfig() {
+  const json = stdioConfig(getApiUrl(), getApiKey());
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'claude_desktop_config.json';
+  a.click();
+}
+
+// Init
+update();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dewie — Query Inspector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+      --border: var(--border); --purple: var(--purple);
+      --purple-lo: var(--purple-lo); --green: #22c55e;
+      --red: #ef4444; --yellow: #f59e0b;
+      --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+      --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+    body::before { content:''; position:fixed; inset:0; z-index:0; background-image:linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px); background-size:48px 48px; pointer-events:none; }
+
+    nav { position:sticky; top:0; z-index:100; background:rgba(7,7,15,0.9); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+    .nav-inner { max-width:1200px; margin:0 auto; padding:0 24px; height:52px; display:flex; align-items:center; justify-content:space-between; }
+    .nav-logo { display:flex; align-items:center; gap:9px; text-decoration:none; }
+    .nav-logo-mark { width:28px; height:28px; background:var(--purple); border-radius:7px; display:flex; align-items:center; justify-content:center; }
+    .nav-logo-mark svg { width:15px; height:15px; fill:#fff; }
+    .nav-logo-text { font-family:var(--mono); font-size:0.9rem; font-weight:500; color:var(--text); }
+    .nav-logo-text span { color:var(--purple); }
+    .nav-links { display:flex; align-items:center; gap:2px; }
+    .nav-badge { font-size:0.68rem; font-family:var(--mono); color:var(--accent-light); background:var(--purple-lo); border:1px solid var(--border); border-radius:4px; padding:2px 7px; margin-left:8px; }
+    .nav-right { display:flex; align-items:center; gap:14px; }
+    .nav-link { font-size:0.82rem; color:var(--dim); text-decoration:none; padding:5px 12px; border-radius:6px; transition:all 0.15s; }
+    .nav-link:hover { color:var(--text); background:var(--purple-lo); }
+    .nav-link.active { color:var(--text); background:var(--purple-lo); }
+
+    .wrap { position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:28px 24px; }
+
+    /* SEARCH BAR */
+    .search-bar { display:flex; gap:10px; margin-bottom:24px; }
+    .search-input { flex:1; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 16px; color:var(--text); font-size:0.9rem; font-family:var(--sans); outline:none; }
+    .search-input:focus { border-color:var(--purple); }
+    .search-input::placeholder { color:var(--xdim); }
+    .btn { padding:9px 18px; border-radius:8px; font-size:0.85rem; font-weight:500; font-family:var(--sans); cursor:pointer; border:none; transition:all 0.15s; }
+    .btn-primary { background:var(--purple); color:#fff; }
+    .btn-primary:hover { background:var(--purple-dark); }
+    .btn-secondary { background:var(--bg2); color:var(--dim); border:1px solid var(--border); }
+    .btn-secondary:hover { color:var(--text); background:var(--bg3); }
+    .btn-run { background:rgba(34,197,94,0.12); color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+    .btn-run:hover { background:rgba(34,197,94,0.22); }
+    .btn-run:disabled { opacity:0.4; cursor:default; }
+
+    /* QUERY LIST */
+    .split { display:grid; grid-template-columns:360px 1fr; gap:20px; }
+    @media (max-width:800px) { .split { grid-template-columns:1fr; } }
+
+    .query-list-panel { background:var(--bg2); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    .panel-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .panel-title { font-size:0.72rem; font-family:var(--mono); color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; }
+    .query-list { overflow-y:auto; max-height:calc(100vh - 260px); }
+    .query-item { padding:12px 16px; border-bottom:1px solid var(--purple-lo); cursor:pointer; transition:background 0.1s; }
+    .query-item:hover { background:var(--purple-lo); }
+    .query-item.active { background:var(--purple-lo); border-left:3px solid var(--purple); }
+    .qi-id { font-family:var(--mono); font-size:0.68rem; color:var(--dim); margin-bottom:4px; }
+    .qi-question { font-size:0.84rem; font-weight:500; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .qi-meta { font-size:0.7rem; color:var(--dim); display:flex; gap:10px; font-family:var(--mono); }
+    .badge-source { font-size:0.62rem; padding:1px 6px; border-radius:4px; font-family:var(--mono); }
+    .badge-agent { background:var(--border); color:var(--accent-light); border:1px solid var(--border); }
+    .badge-api { background:rgba(34,197,94,0.1); color:var(--green); border:1px solid rgba(34,197,94,0.2); }
+
+    /* DETAIL PANEL */
+    .detail-panel { display:flex; flex-direction:column; gap:16px; }
+    .empty-state { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:48px 24px; text-align:center; color:var(--dim); font-size:0.9rem; }
+
+    .card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px 24px; }
+    .card-title { font-size:0.68rem; font-family:var(--mono); color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }
+    .q-text { font-size:1rem; font-weight:600; letter-spacing:-0.01em; margin-bottom:10px; }
+    .meta-row { display:flex; flex-wrap:wrap; gap:16px; font-size:0.75rem; font-family:var(--mono); color:var(--dim); }
+    .meta-item strong { color:var(--text); }
+
+    /* ANSWER */
+    .answer-box { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:16px; font-size:0.88rem; line-height:1.65; white-space:pre-wrap; }
+    .no-answer { color:var(--dim); font-style:italic; font-size:0.85rem; }
+
+    /* TOOL CALLS / DOCS */
+    .hop-item { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:8px; }
+    .hop-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .hop-num { font-family:var(--mono); font-size:0.7rem; color:var(--purple); }
+    .hop-tool { font-family:var(--mono); font-size:0.82rem; color:var(--accent-light); font-weight:600; }
+    .hop-args { font-family:var(--mono); font-size:0.75rem; color:var(--dim); margin-bottom:8px; padding:6px 10px; background:var(--bg); border-radius:5px; }
+    .hop-resp { font-size:0.78rem; color:var(--dim); line-height:1.5; max-height:160px; overflow-y:auto; white-space:pre-wrap; border-top:1px solid var(--border); padding-top:8px; margin-top:8px; }
+
+    /* RESULT DOCS */
+    .doc-item { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:12px 16px; margin-bottom:8px; }
+    .doc-title { font-size:0.85rem; font-weight:500; margin-bottom:4px; }
+    .doc-title a { color:var(--text); text-decoration:none; }
+    .doc-title a:hover { color:var(--accent-light); }
+    .doc-score { font-family:var(--mono); font-size:0.72rem; color:var(--green); }
+    .doc-summary { font-size:0.78rem; color:var(--dim); line-height:1.5; margin-top:6px; }
+    .doc-tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+    .tag { font-size:0.68rem; font-family:var(--mono); padding:2px 7px; border-radius:100px; background:var(--purple-lo); border:1px solid var(--border); color:var(--accent-light); }
+
+    /* NEW QUERY RUNNER */
+    .runner-card { background:var(--bg2); border:1px solid rgba(34,197,94,0.2); border-radius:12px; padding:20px 24px; margin-bottom:20px; }
+    .runner-title { font-size:0.68rem; font-family:var(--mono); color:var(--green); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }
+    .runner-row { display:flex; gap:10px; margin-bottom:10px; }
+    .runner-input { flex:1; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:0.88rem; font-family:var(--sans); outline:none; }
+    .runner-input:focus { border-color:var(--green); }
+    .runner-input::placeholder { color:var(--xdim); }
+    .runner-meta { display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:0.78rem; color:var(--dim); }
+    .runner-meta select { background:var(--bg3); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:0.78rem; padding:4px 8px; outline:none; }
+    .runner-status { font-size:0.8rem; color:var(--dim); margin-top:8px; font-family:var(--mono); }
+
+    .loading { color:var(--dim); font-size:0.82rem; padding:12px 0; }
+    .error-text { color:#f87171; font-size:0.82rem; }
+  </style>
+  <script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link">Query</a>
+      <a href="/ui/corpus.html" class="nav-link">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <a href="/ui/admin.html" class="nav-link">← Admin</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- NEW QUERY RUNNER -->
+  <div class="runner-card">
+    <div class="runner-title">Run new query</div>
+    <div class="runner-row">
+      <input class="runner-input" id="run-query" placeholder="Ask anything…" autocomplete="off" />
+      <button class="btn btn-run" id="run-btn" onclick="runNewQuery()">Run ⚡</button>
+    </div>
+    <div class="runner-meta">
+      <label>Mode
+        <select id="run-mode">
+          <option value="agent" selected>Agent</option>
+          <option value="retrieval">Retrieval</option>
+        </select>
+      </label>
+      <label>Model
+        <select id="run-model">
+          <option value="gpt-4o-2024-11-20">gpt-4o</option>
+          <option value="gpt-5.4">gpt-5.4</option>
+          <option value="gpt-5.4-mini">gpt-5.4-mini</option>
+          <option value="gpt-5.1">gpt-5.1</option>
+          <option value="gpt-5-mini">gpt-5-mini</option>
+          <option value="claude-sonnet-4.6">claude-sonnet-4.6</option>
+          <option value="claude-opus-4.6">claude-opus-4.6</option>
+          <option value="claude-sonnet-4.5">claude-sonnet-4.5</option>
+          <option value="claude-haiku-4.5">claude-haiku-4.5</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+          <option value="gemini-3.1-pro-preview">gemini-3.1-pro</option>
+          <option value="gpt-4.1-2025-04-14">gpt-4.1</option>
+          <option value="grok-code-fast-1">grok-code-fast</option>
+        </select>
+      </label>
+      <label>Max hops
+        <select id="run-hops">
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="8">8</option>
+        </select>
+      </label>
+    </div>
+    <div class="runner-status" id="run-status"></div>
+  </div>
+
+  <!-- SPLIT: list + detail -->
+  <div class="split">
+    <!-- LEFT: query list -->
+    <div class="query-list-panel">
+      <div class="panel-header">
+        <span class="panel-title">Recent queries</span>
+        <button class="btn btn-secondary" style="font-size:0.72rem;padding:4px 10px" onclick="loadList()">↻ Refresh</button>
+      </div>
+      <div class="query-list" id="query-list">
+        <div class="loading" style="padding:16px">Loading…</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: detail -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="empty-state" id="empty-state">Select a query from the list, or run a new one above.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = window._pfx + '/api';
+let _selectedId = null;
+
+async function init() {
+  const me = await fetch(`${API}/auth/me`, {credentials:'include'}).then(r=>r.json()).catch(()=>null);
+  if (!me || me.detail) { window.location.href = '/auth/google'; return; }
+  if (!me.is_admin) { window.location.href = window._pfx + '/ui/app.html'; return; }
+  loadList();
+  document.getElementById('run-query').addEventListener('keydown', e => { if (e.key === 'Enter') runNewQuery(); });
+  // Support ?id= direct link
+  const params = new URLSearchParams(location.search);
+  const directId = params.get('id');
+  if (directId) {
+    await loadList(directId);
+    selectQuery(parseInt(directId), null);
+  } else {
+    loadList();
+  }
+}
+
+// ── QUERY LIST ────────────────────────────────────────────────────────────────
+
+async function loadList(highlightId) {
+  const el = document.getElementById('query-list');
+  const rows = await fetch(`${API}/admin/query-log?limit=100`, {credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if (!rows || !Array.isArray(rows)) {
+    el.innerHTML = '<div class="loading" style="padding:16px;color:#f87171">Failed to load. Check /admin/query-log endpoint.</div>';
+    return;
+  }
+  el.innerHTML = rows.map(q => {
+    const ts = q.ts ? new Date(q.ts).toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+    const sourceClass = q.source === 'agent' ? 'badge-agent' : 'badge-api';
+    return `<div class="query-item${highlightId && q.id == highlightId ? ' active' : ''}" onclick="selectQuery(${q.id}, this)">
+      <div class="qi-id">#${q.id} · ${ts}</div>
+      <div class="qi-question">${esc(q.question || '—')}</div>
+      <div class="qi-meta">
+        <span class="badge-source ${sourceClass}">${esc(q.source||'api')}</span>
+        ${q.hops ? `<span>${q.hops} hops</span>` : ''}
+        ${q.model ? `<span>${esc(q.model)}</span>` : ''}
+        ${q.elapsed_ms ? `<span>${q.elapsed_ms}ms</span>` : ''}
+      </div>
+    </div>`;
+  }).join('') || '<div class="loading" style="padding:16px">No queries yet.</div>';
+
+  if (highlightId) {
+    setTimeout(() => selectQuery(highlightId, document.querySelector(`.query-item:has(.qi-id:contains('#${highlightId}'))`)), 100);
+  }
+}
+
+// ── DETAIL ─────────────────────────────────────────────────────────────────────
+
+async function selectQuery(id, el) {
+  document.querySelectorAll('.query-item').forEach(e => e.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _selectedId = id;
+
+  const panel = document.getElementById('detail-panel');
+  panel.innerHTML = '<div class="card"><div class="loading">Loading query #' + id + '…</div></div>';
+
+  const q = await fetch(`${API}/admin/query-log/${id}`, {credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if (!q) {
+    panel.innerHTML = `<div class="card"><div class="error-text">Failed to load query #${id}</div></div>`;
+    return;
+  }
+
+  renderDetail(panel, q);
+}
+
+function renderDetail(panel, q) {
+  const ts = q.ts ? new Date(q.ts).toLocaleString('en-US', {dateStyle:'medium',timeStyle:'short'}) : '—';
+  const hopTrace = Array.isArray(q.hop_trace) ? q.hop_trace : [];
+  const fullResults = q.full_results;
+
+  // Compute stats from trace
+  const searches = hopTrace.filter(h => h.tool === 'dewie_search').length;
+  const reads    = hopTrace.filter(h => h.tool === 'dewie_read').length;
+  const readIds  = new Set(hopTrace.filter(h => h.tool === 'dewie_read').map(h => h.args?.doc_id));
+
+  let html = `
+    <div class="card">
+      <div class="q-text">${esc(q.question || '—')}</div>
+      <div class="meta-row">
+        <span>id: <strong>#${q.id}</strong></span>
+        <span>ts: <strong>${ts}</strong></span>
+        <span>source: <strong>${esc(q.source||'—')}</strong></span>
+        ${q.model ? `<span>model: <strong>${esc(q.model)}</strong></span>` : ''}
+        <span>searches: <strong>${searches}</strong></span>
+        <span>docs read: <strong>${reads}</strong></span>
+        ${q.elapsed_ms ? `<span>elapsed: <strong>${q.elapsed_ms}ms</strong></span>` : ''}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Answer</div>
+      ${q.answer ? `<div class="answer-box">${esc(q.answer)}</div>` : '<div class="no-answer">No answer produced.</div>'}
+    </div>`;
+
+  // Full agent trace: each step rendered in detail
+  if (hopTrace.length) {
+    html += `<div class="card"><div class="card-title">Agent trace — ${hopTrace.length} step${hopTrace.length!==1?'s':''}</div>`;
+
+    hopTrace.forEach((hop, i) => {
+      const tool = hop.tool || hop.name || '?';
+      const args = hop.args || {};
+
+      if (tool === 'dewie_search') {
+        const candidates = hop.search_results || [];
+        const query = args.query || '';
+        html += `<div class="hop-item" style="border-left:3px solid var(--purple)">
+          <div class="hop-header">
+            <span class="hop-num">SEARCH ${i+1}</span>
+            <span class="hop-tool" style="color:var(--accent-light)">dewie_search</span>
+          </div>
+          <div class="hop-args">query: "${esc(query)}"</div>`;
+        if (candidates.length) {
+          html += `<div style="margin-top:10px">
+            <div style="font-size:0.68rem;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">${candidates.length} candidates returned</div>`;
+          candidates.forEach((doc, rank) => {
+            const wasRead = readIds.has(doc.doc_id);
+            const borderColor = wasRead ? 'rgba(34,197,94,0.4)' : 'var(--border)';
+            const badge = wasRead
+              ? '<span style="font-size:0.65rem;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);border-radius:4px;padding:1px 6px;margin-left:8px">READ</span>'
+              : '<span style="font-size:0.65rem;background:rgba(100,116,139,0.15);color:#64748b;border:1px solid rgba(100,116,139,0.2);border-radius:4px;padding:1px 6px;margin-left:8px">SKIPPED</span>';
+            html += `<div style="background:var(--bg);border:1px solid ${borderColor};border-radius:6px;padding:9px 12px;margin-bottom:6px">
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px">
+                <span style="font-family:var(--mono);font-size:0.68rem;color:var(--dim)">#${rank+1}</span>
+                <span style="font-size:0.83rem;font-weight:500">${esc(doc.title||'—')}</span>
+                ${badge}
+                <span style="font-family:var(--mono);font-size:0.7rem;color:var(--green);margin-left:auto">${doc.score?.toFixed(4)||''}</span>
+              </div>
+              <div style="font-size:0.72rem;color:var(--dim);margin-bottom:4px">${esc(doc.source||'')} · ${esc(doc.doc_id?.slice(0,8)||'')}...</div>
+              ${doc.summary ? `<div style="font-size:0.78rem;color:var(--dim);line-height:1.45">${esc(doc.summary)}</div>` : ''}
+              ${(doc.topics||[]).length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${doc.topics.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+            </div>`;
+          });
+          html += `</div>`;
+        } else {
+          html += `<div class="hop-resp">No results returned.</div>`;
+        }
+        html += `</div>`;
+
+      } else if (tool === 'dewie_read') {
+        const docId = args.doc_id || '';
+        const success = hop.was_read;
+        const preview = hop.response || '';
+        const borderColor = success ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.3)';
+        const statusLabel = success === false ? '❌ Failed' : success ? '✓ Read' : 'Read';
+        html += `<div class="hop-item" style="border-left:3px solid ${borderColor}">
+          <div class="hop-header">
+            <span class="hop-num">${statusLabel}</span>
+            <span class="hop-tool" style="color:#86efac">dewie_read</span>
+          </div>
+          <div class="hop-args">doc_id: ${esc(docId)}</div>
+          ${preview ? `<div class="hop-resp">${esc(typeof preview === 'string' ? preview : JSON.stringify(preview))}</div>` : ''}
+        </div>`;
+
+      } else if (tool === 'dewie_expand') {
+        html += `<div class="hop-item" style="border-left:3px solid rgba(245,158,11,0.4)">
+          <div class="hop-header">
+            <span class="hop-num">EXPAND</span>
+            <span class="hop-tool" style="color:#fbbf24">dewie_expand</span>
+          </div>
+          <div class="hop-args">doc_id: ${esc(args.doc_id||'')}</div>
+        </div>`;
+
+      } else {
+        html += `<div class="hop-item">
+          <div class="hop-header"><span class="hop-tool">${esc(tool)}</span></div>
+          <div class="hop-args">${esc(JSON.stringify(args))}</div>
+        </div>`;
+      }
+    });
+    html += '</div>';
+  }
+
+  // Retrieval results (for non-agent queries)
+  const results = fullResults?.results || [];
+  if (results.length && hopTrace.length === 0) {
+    html += `<div class="card"><div class="card-title">Retrieved documents (${results.length})</div>`;
+    results.forEach(r => {
+      html += `<div class="doc-item">
+        <div class="doc-title">
+          ${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title||r.doc_id||'—')}</a>` : esc(r.title||'—')}
+          ${r.score != null ? `<span class="doc-score" style="margin-left:8px">${r.score.toFixed(4)}</span>` : ''}
+        </div>
+        ${r.summary ? `<div class="doc-summary">${esc(r.summary||'')}</div>` : ''}
+        ${(r.topics||[]).length ? `<div class="doc-tags">${r.topics.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  const gap = fullResults?.result_confidence?.gap_signal;
+  if (gap) {
+    html += `<div class="card" style="border-color:rgba(239,68,68,0.2)"><div class="card-title" style="color:#f87171">Gap signal</div><div style="font-size:0.84rem;color:#fca5a5">${esc(gap)}</div></div>`;
+  }
+
+  panel.innerHTML = html;
+}
+
+// ── NEW QUERY RUNNER ───────────────────────────────────────────────────────────
+
+async function runNewQuery() {
+  const q = document.getElementById('run-query').value.trim();
+  if (!q) return;
+  const mode = document.getElementById('run-mode').value;
+  const model = document.getElementById('run-model').value;
+  const max_hops = parseInt(document.getElementById('run-hops').value);
+  const btn = document.getElementById('run-btn');
+  const status = document.getElementById('run-status');
+
+  btn.disabled = true;
+  status.textContent = mode === 'agent' ? `Running agent (${model})…` : 'Searching…';
+
+  try {
+    let res;
+    if (mode === 'agent') {
+      res = await fetch(`${API}/query/agent`, {
+        method:'POST', credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({query: q, model, max_hops})
+      }).then(r=>r.json());
+      status.textContent = res.query_id
+        ? `Done — query #${res.query_id} · ${res.hops} hops · ${res.docs_read?.length??0} docs read`
+        : 'Done';
+      // Auto-select in list
+      if (res.query_id) {
+        await loadList(res.query_id);
+        await selectQuery(res.query_id, null);
+      }
+    } else {
+      res = await fetch(`${API}/query`, {
+        method:'POST', credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({query: q, limit: 10})
+      }).then(r=>r.json());
+      status.textContent = res.query_id
+        ? `Done — query #${res.query_id} · ${res.results?.length??0} results`
+        : `Done — ${res.results?.length??0} results`;
+      if (res.query_id) {
+        await loadList(res.query_id);
+        await selectQuery(res.query_id, null);
+      }
+    }
+  } catch(e) {
+    status.textContent = `Error: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+    document.getElementById('run-query').value = '';
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

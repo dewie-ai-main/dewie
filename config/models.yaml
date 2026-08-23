@@ -1,0 +1,125 @@
+# Dewie — Model Registry
+#
+# Each provider entry defines:
+#   base_url:       API base URL (including /v1 where applicable)
+#   api_key_env:    env var holding the API key (omit for unauthenticated local providers)
+#   probe_url:      URL to GET for liveness check (optional; if absent, provider assumed up)
+#   probe_timeout:  seconds to wait for probe (default 3)
+#   models:         list of model entries
+#
+# Each model entry:
+#   id:             model ID to send in API requests
+#   display_name:   human-readable label (optional; defaults to id)
+#   context_window: max input tokens (optional)
+#   capabilities:   list of capability tags (see below)
+#   enrichment:     override enrichment-specific settings (optional)
+#     prompt_style: "system_user" | "user_only"  (some models ignore system role)
+#     json_mode:    "json_schema" | "json_object" | "none"
+#                   json_schema  = response_format: {type: json_schema, json_schema: {...}}
+#                   json_object  = response_format: {type: json_object}
+#                   none         = no response_format; parse from text
+#     temperature:  float (default 0.1 for enrichment)
+#     max_tokens:   int (default 600)
+#   cost:           cost info for display (optional)
+#     input_per_1m: USD
+#     output_per_1m: USD
+#
+# Capability tags (informational):
+#   function_calling  — supports OpenAI-style tool/function calls
+#   json_schema       — supports response_format: {type: json_schema}
+#   json_object       — supports response_format: {type: json_object}
+#   vision            — supports image inputs
+#   reasoning         — chain-of-thought / thinking mode available
+
+providers:
+
+  # ── OpenAI ───────────────────────────────────────────────────────────────────
+  openai:
+    base_url: "https://api.openai.com/v1"
+    api_key_env: OPENAI_API_KEY
+    models:
+      - id: gpt-4.1
+        display_name: "GPT-4.1"
+        context_window: 1000000
+        capabilities: [function_calling, json_object, vision]
+        enrichment:
+          json_mode: json_object
+          temperature: 0.1
+        cost:
+          input_per_1m: 2.00
+          output_per_1m: 8.00
+
+      - id: gpt-4o
+        display_name: "GPT-4o"
+        context_window: 128000
+        capabilities: [function_calling, json_object, vision]
+        enrichment:
+          json_mode: json_object
+          temperature: 0.1
+        cost:
+          input_per_1m: 2.50
+          output_per_1m: 10.00
+
+      - id: gpt-4o-mini
+        display_name: "GPT-4o mini"
+        context_window: 128000
+        capabilities: [function_calling, json_object, vision]
+        enrichment:
+          json_mode: json_object
+          temperature: 0.1
+        cost:
+          input_per_1m: 0.15
+          output_per_1m: 0.60
+
+      - id: gpt-5-mini
+        display_name: "GPT-5 mini"
+        context_window: 128000
+        capabilities: [function_calling, json_object, vision]
+        enrichment:
+          json_mode: json_object
+          temperature: 0.1
+
+  # ── Anthropic ────────────────────────────────────────────────────────────────
+  anthropic:
+    base_url: "https://api.anthropic.com/v1"
+    api_key_env: ANTHROPIC_API_KEY
+    models:
+      - id: claude-sonnet-4-5
+        display_name: "Claude Sonnet 4.5"
+        context_window: 200000
+        capabilities: [function_calling, vision]
+        enrichment:
+          json_mode: none
+          temperature: 0.1
+        cost:
+          input_per_1m: 3.00
+          output_per_1m: 15.00
+
+      - id: claude-haiku-4-5-20251001
+        display_name: "Claude Haiku 4.5"
+        context_window: 200000
+        capabilities: [function_calling, vision]
+        enrichment:
+          json_mode: none
+          temperature: 0.1
+        cost:
+          input_per_1m: 0.80
+          output_per_1m: 4.00
+
+      - id: claude-opus-4-6
+        display_name: "Claude Opus 4.6"
+        context_window: 200000
+        capabilities: [function_calling, vision]
+        enrichment:
+          json_mode: none
+          temperature: 0.1
+        cost:
+          input_per_1m: 15.00
+          output_per_1m: 75.00
+
+  # ── OpenAI-Compatible (custom endpoint) ──────────────────────────────────────
+  openai-compatible:
+    base_url: ""
+    dynamic: true
+    models:
+      # Models are fetched dynamically from the configured base_url

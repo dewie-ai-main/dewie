@@ -1,0 +1,21 @@
+{
+  "customSyntax": "postcss-html",
+  "rules": {
+    "indentation": 2,
+    "string-quotes": "single",
+    "no-descending-specificity": true,
+    "selector-class-pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+    "color-hex-length": "short",
+    "color-no-invalid-hex": true,
+    "declaration-block-no-duplicate-properties": [true, {"ignore": ["consecutive-duplicates-with-different-values"]}],
+    "declaration-block-no-shorthand-property-overrides": true,
+    "declaration-no-important": true,
+    "function-calc-no-unspaced-operator": true,
+    "function-url-quotes": "always",
+    "media-feature-range-notation": "prefix",
+    "no-duplicate-selectors": true,
+    "at-rule-no-unknown": [true, {"ignoreAtRules": ["keyframes", "media"]}],
+    "selector-pseudo-class-no-unknown": [true, {"ignorePseudoClasses": ["global"]}]
+  },
+  "ignoreFiles": ["**/*.js", "**/*.ts", "**/*.py", "**/*.md"]
+}

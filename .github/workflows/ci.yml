@@ -1,0 +1,72 @@
+name: CI
+
+# Every PR and every push to main runs all four gates. The smoke job exists
+# because mocked unit tests cannot catch wiring bugs (Postgres-only SQL on
+# SQLite, broken startup, dead routes) — it boots a real server and drives a
+# document through ingest → search → corpus-first web_search → self-build.
+# The docker-e2e job does the same through the shipped Dockerfile and compose
+# files on Postgres+pgvector, so the container surface can't silently rot.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Ruff
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check src tests
+
+  test:
+    name: Unit + E2E (mocked storage)
+    runs-on: ubuntu-22.04
+    env:
+      JWT_SECRET: ci-test-placeholder-do-not-use-in-production-1234
+      ADMIN_KEY: ci-test-placeholder-do-not-use-in-production
+      AUTH_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Import check
+        run: python -c "import dewie.main; print('app imports,', len(dewie.main.app.routes), 'routes')"
+      - name: Unit + E2E suites
+        run: pytest tests/unit tests/e2e -q --no-cov
+
+  smoke:
+    name: Live SQLite smoke (boot, ingest, search, self-build)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: End-to-end smoke against a real server
+        run: ./scripts/smoke_sqlite.sh python
+
+  docker-e2e:
+    name: Docker e2e (image build, pgvector compose, ingest → search)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image and boot compose stack
+        run: docker compose -f docker-compose.e2e-pgvector.yml up -d --build --wait
+      - name: Smoke against the containerized server
+        run: ./scripts/smoke_compose.sh 8767
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.e2e-pgvector.yml logs --tail=200
+      - name: Teardown
+        if: always()
+        run: docker compose -f docker-compose.e2e-pgvector.yml down -v

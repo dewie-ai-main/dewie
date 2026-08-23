@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+  <script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dewie — Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #12121f;
+      --border: var(--border); --purple: var(--purple);
+      --purple-lo: var(--purple-lo); --green: #22c55e;
+      --red: #ef4444; --text: #e2e8f0; --dim: #64748b; --xdim: #334155;
+      --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
+    }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(7,7,15,0.9); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo-mark { width: 28px; height: 28px; background: var(--purple); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .nav-logo-mark svg { width: 15px; height: 15px; fill: #fff; }
+    .nav-logo-text { font-family: var(--mono); font-size: 0.9rem; font-weight: 500; color: var(--text); }
+    .nav-logo-text span { color: var(--purple); }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link { font-size: 0.82rem; color: var(--dim); text-decoration: none; padding: 5px 12px; border-radius: 6px; transition: all 0.15s; }
+    .nav-link:hover { color: var(--text); background: var(--purple-lo); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-admin { font-size: 0.78rem; color: var(--accent-light); text-decoration: none; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; display: none; }
+    .nav-admin:hover { background: var(--purple-lo); }
+    .btn-signout { font-size: 0.78rem; color: var(--dim); background: none; border: none; cursor: pointer; padding: 4px 8px; font-family: var(--sans); }
+    .btn-signout:hover { color: var(--red); }
+
+    /* LAYOUT */
+    .shell { position: relative; z-index: 1; display: flex; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* SIDEBAR */
+    .sidebar { width: 180px; flex-shrink: 0; padding: 28px 0; }
+    .tab-section-label { font-size: 0.65rem; font-family: var(--mono); color: var(--xdim); letter-spacing: 0.1em; text-transform: uppercase; padding: 14px 12px 5px; }
+    .tab-btn { display: block; width: 100%; text-align: left; background: none; border: none; padding: 8px 12px; border-radius: 7px; font-size: 0.84rem; color: var(--dim); cursor: pointer; font-family: var(--sans); margin-bottom: 2px; transition: all 0.15s; }
+    .tab-btn:hover { background: var(--purple-lo); color: var(--text); }
+    .tab-btn.active { background: var(--purple-lo); color: var(--accent-light); border: 1px solid var(--border); }
+
+    /* MAIN */
+    .main-panel { flex: 1; min-width: 0; padding: 28px 0 28px 28px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .panel-sub { font-size: 0.82rem; color: var(--dim); margin-bottom: 24px; }
+
+    /* CARDS */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .card-title { font-size: 0.72rem; font-family: var(--mono); color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* PROFILE */
+    .profile-row { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+    .avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--purple-lo); border: 2px solid var(--border); object-fit: cover; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--accent-light); font-family: var(--mono); }
+    .profile-name { font-size: 1rem; font-weight: 600; margin-bottom: 3px; }
+    .profile-email { font-size: 0.85rem; color: var(--dim); }
+    .profile-badges { display: flex; gap: 6px; margin-top: 8px; }
+    .badge { display: inline-block; font-size: 0.68rem; font-family: var(--mono); padding: 2px 8px; border-radius: 100px; }
+    .badge-plan { background: var(--purple-lo); color: var(--accent-light); border: 1px solid var(--border); }
+    .badge-admin { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .badge-approved { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .badge-pending { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+
+    /* DETAIL GRID */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 540px) { .detail-grid { grid-template-columns: 1fr; } }
+    .detail-item { background: var(--bg3); border-radius: 8px; padding: 12px 16px; }
+    .detail-label { font-size: 0.68rem; font-family: var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .detail-value { font-size: 0.85rem; color: var(--text); font-family: var(--mono); word-break: break-all; }
+    .detail-value.dim { color: var(--dim); font-family: var(--sans); }
+
+    /* API KEYS */
+    .keys-list { display: grid; gap: 10px; }
+    .key-row { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .key-info { flex: 1; min-width: 0; }
+    .key-name { font-size: 0.85rem; font-weight: 500; margin-bottom: 2px; }
+    .key-prefix { font-family: var(--mono); font-size: 0.75rem; color: var(--dim); }
+    .key-date { font-size: 0.7rem; color: var(--xdim); margin-top: 2px; }
+    .key-scopes { font-size: 0.7rem; color: var(--accent-light); font-family: var(--mono); }
+    .btn-danger-sm { font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.3); background: transparent; color: #f87171; cursor: pointer; font-family: var(--sans); transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+    .btn-danger-sm:hover { background: rgba(239,68,68,0.08); }
+    .form-row { display: flex; gap: 10px; margin-top: 14px; }
+    .form-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--text); font-size: 0.85rem; font-family: var(--sans); outline: none; }
+    .form-input:focus { border-color: var(--purple); }
+    .form-input::placeholder { color: var(--xdim); }
+    .btn-primary { background: var(--purple); color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; font-family: var(--sans); cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+    .btn-primary:hover { opacity: 0.85; }
+    .key-revealed { background: var(--bg3); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 12px 16px; font-family: var(--mono); font-size: 0.82rem; color: #86efac; margin-top: 12px; word-break: break-all; }
+    .key-revealed-label { font-size: 0.68rem; color: var(--green); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+
+    /* STATUS BADGES */
+    .status-badge { display: inline-block; font-size: 0.68rem; font-family: var(--mono); padding: 2px 8px; border-radius: 100px; }
+    .status-ready   { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .status-pending { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+    .status-error, .status-failed { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+
+    /* TABLE */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .tbl th { text-align: left; font-size: 0.68rem; font-family: var(--mono); color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .tbl td { padding: 10px 12px; border-bottom: 1px solid var(--purple-lo); vertical-align: middle; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(255,255,255,0.02); }
+    .tbl-url { font-size: 0.78rem; color: var(--dim); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* QUERY HISTORY */
+    .history-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+    .history-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+    .history-query { font-size: 0.88rem; font-weight: 500; flex: 1; }
+    .history-time { font-size: 0.7rem; color: var(--dim); font-family: var(--mono); white-space: nowrap; }
+    .history-meta { display: flex; gap: 12px; font-size: 0.72rem; color: var(--dim); font-family: var(--mono); }
+
+    /* MISC */
+    .empty { text-align: center; padding: 28px; color: var(--dim); font-size: 0.85rem; }
+    .error-msg { color: #f87171; font-size: 0.8rem; margin-top: 8px; }
+    .loading-text { color: var(--dim); font-size: 0.85rem; padding: 12px 0; }
+    .section-action { font-size: 0.78rem; color: var(--dim); text-decoration: none; cursor: pointer; background: none; border: none; font-family: var(--sans); }
+    .section-action:hover { color: var(--text); }
+
+    @media (max-width: 640px) { .sidebar { display: none; } .main-panel { padding-left: 0; } }
+
+    /* MCP client buttons */
+    .mcp-client-btn { font-size: 0.8rem; padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg3); color: var(--dim); cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
+    .mcp-client-btn:hover { color: var(--text); border-color: var(--purple); }
+    .mcp-client-btn.active { background: var(--purple-lo); color: var(--accent-light); border-color: var(--purple); }
+  </style>
+  <script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link">Query</a>
+      <a href="/ui/corpus.html" class="nav-link">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <a href="/ui/admin.html" class="nav-admin" id="nav-admin-link">Admin ↗</a>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="tab-section-label">Account</div>
+    <button class="tab-btn active" data-tab="profile" onclick="showTab(this)">Profile</button>
+
+
+    <div class="tab-section-label">Content</div>
+    <button class="tab-btn" data-tab="sources" onclick="showTab(this);loadSources()">Sources</button>
+    <button class="tab-btn" data-tab="feeds" onclick="showTab(this);loadFeeds()">Feeds</button>
+
+    <div class="tab-section-label">Settings</div>
+    <button class="tab-btn" data-tab="apikeys" onclick="showTab(this)">API Keys</button>
+    <button class="tab-btn" data-tab="mcp" onclick="showTab(this);loadMcp()">MCP Setup</button>
+    <button class="tab-btn" data-tab="security" id="sidebar-security" style="display:none" onclick="showTab(this)">Security</button>
+    <button class="tab-btn" data-tab="history" onclick="showTab(this);loadHistory()">History</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-panel">
+
+    <!-- PROFILE -->
+    <div class="panel active" id="panel-profile">
+      <div class="panel-title">Profile</div>
+      <div class="panel-sub">Your account details and identity.</div>
+
+      <div class="card">
+        <div class="profile-row">
+          <div class="avatar" id="avatar-img">—</div>
+          <div>
+            <div class="profile-name" id="profile-name">Loading…</div>
+            <div class="profile-email" id="profile-email"></div>
+            <div class="profile-badges" id="profile-badges"></div>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Auth provider</div>
+            <div class="detail-value dim" id="detail-provider">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- SOURCES -->
+    <div class="panel" id="panel-sources">
+      <div class="panel-title">Sources</div>
+      <div class="panel-sub">Documents you've ingested. <a href="/ui/my-uploads.html" style="color:var(--accent-light)">Full uploads page ↗</a></div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">Add URL</div>
+        <div class="form-row" style="margin-top:0">
+          <input class="form-input" id="ingest-url" placeholder="https://…" />
+          <button class="btn-primary" onclick="ingestUrl()">Add</button>
+        </div>
+        <div id="ingest-msg" style="font-size:0.8rem;margin-top:8px"></div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="sources-list">
+          <div class="loading-text" style="padding:20px">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEEDS -->
+    <div class="panel" id="panel-feeds">
+      <div class="panel-title">Feeds</div>
+      <div class="panel-sub">RSS and Atom feeds you're subscribed to.</div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">Subscribe to feed</div>
+        <div class="form-row" style="margin-top:0">
+          <input class="form-input" id="feed-url" placeholder="https://…/feed.xml" />
+          <button class="btn-primary" onclick="addFeed()">Subscribe</button>
+        </div>
+        <div id="feed-msg" style="font-size:0.8rem;margin-top:8px"></div>
+      </div>
+
+      <div id="feeds-list"><div class="loading-text">Loading…</div></div>
+    </div>
+
+    <!-- API KEYS -->
+    <div class="panel" id="panel-apikeys">
+      <div class="panel-title">API Keys</div>
+      <div class="panel-sub">Personal API keys for programmatic access.</div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Your keys</div>
+          <button class="section-action" onclick="loadKeys()">Refresh</button>
+        </div>
+        <div class="keys-list" id="keys-list"><div class="loading-text">Loading…</div></div>
+        <div class="form-row">
+          <input class="form-input" id="new-key-name" placeholder="Key name (e.g. cursor-plugin)" maxlength="64" />
+          <button class="btn-primary" onclick="createKey()">Create key</button>
+        </div>
+        <div id="key-revealed" style="display:none"></div>
+        <div class="error-msg" id="key-error"></div>
+      </div>
+    </div>
+
+    <!-- SECURITY -->
+    <div class="panel" id="panel-security">
+      <div class="panel-title">Security</div>
+      <div class="panel-sub">Change your password.</div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Change password</div>
+        <div class="detail-item" style="margin-bottom:12px">
+          <div class="detail-label">Current password</div>
+          <input class="form-input" id="curr-pass" type="password" placeholder="Enter current password" autocomplete="current-password" style="margin-top:6px" />
+        </div>
+        <div class="detail-item" style="margin-bottom:12px">
+          <div class="detail-label">New password</div>
+          <input class="form-input" id="new-pass" type="password" placeholder="Min 8 characters" autocomplete="new-password" style="margin-top:6px" />
+        </div>
+        <div class="detail-item" style="margin-bottom:18px">
+          <div class="detail-label">Confirm new password</div>
+          <input class="form-input" id="confirm-pass" type="password" placeholder="Re-enter new password" autocomplete="new-password" style="margin-top:6px" />
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn-primary" onclick="changePassword()">Change password</button>
+          <span class="error-msg" id="password-error" style="margin:0"></span>
+          <span id="password-success" style="font-size:0.82rem;color:var(--green);display:none">✓ Password changed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="panel" id="panel-history">
+      <div class="panel-title">History</div>
+      <div class="panel-sub">Your recent queries.</div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent queries</div>
+          <button class="section-action" onclick="loadHistory()">Refresh</button>
+        </div>
+        <div id="history-list"><div class="loading-text">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- MCP SETUP -->
+    <div class="panel" id="panel-mcp">
+      <div class="panel-title">MCP Setup</div>
+      <div class="panel-sub">Connect any MCP-compatible AI tool directly to your Dewie corpus.</div>
+
+      <!-- Client picker -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">Client</div>
+        <div id="mcp-client-btns" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0">
+          <button class="mcp-client-btn active" data-client="claude-desktop" onclick="selectMcpClient(this)">Claude Desktop</button>
+          <button class="mcp-client-btn" data-client="cursor" onclick="selectMcpClient(this)">Cursor</button>
+          <button class="mcp-client-btn" data-client="vscode" onclick="selectMcpClient(this)">VS Code</button>
+          <button class="mcp-client-btn" data-client="cline" onclick="selectMcpClient(this)">Cline</button>
+          <button class="mcp-client-btn" data-client="claude-code" onclick="selectMcpClient(this)">Claude Code CLI</button>
+          <button class="mcp-client-btn" data-client="http" onclick="selectMcpClient(this)">HTTP / manual</button>
+        </div>
+      </div>
+
+      <!-- API key picker -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:10px">API Key</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <select id="mcp-key-select" class="form-input" style="max-width:320px" onchange="renderMcpConfig()">
+            <option value="">— select a key —</option>
+          </select>
+          <button class="section-action" onclick="showTab(document.querySelector('[data-tab=apikeys]'))">Create key ↗</button>
+        </div>
+        <div id="mcp-key-hint" style="font-size:0.75rem;color:var(--dim);margin-top:8px">Select an API key above to generate your config.</div>
+      </div>
+
+      <!-- Generated config -->
+      <div class="card" id="mcp-config-card" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="card-title" id="mcp-config-label">Config</div>
+          <div style="display:flex;gap:8px">
+            <button class="section-action" id="mcp-copy-btn" onclick="copyMcpConfig()">Copy</button>
+            <button class="section-action" id="mcp-download-btn" onclick="downloadMcpConfig()" style="display:none">Download</button>
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <pre id="mcp-config-pre" style="padding:16px;font-family:var(--mono);font-size:0.75rem;line-height:1.6;overflow-x:auto;white-space:pre;color:var(--text)"></pre>
+        </div>
+        <div id="mcp-config-hint" style="font-size:0.75rem;color:var(--dim);margin-top:10px;line-height:1.5"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-panel -->
+</div><!-- /shell -->
+
+<script>
+const API = window._pfx + '/api';
+const _nativeFetch = window.fetch.bind(window);
+window.fetch = async (input, init = {}) => {
+  const url = typeof input === 'string' ? input : input.url;
+  const isSameOrigin = url.startsWith('/') || url.startsWith(window.location.origin);
+  if (!isSameOrigin) return _nativeFetch(input, init);
+  const headers = new Headers(init.headers || {});
+  const key = (localStorage.getItem('dewie_api_key') || '').trim();
+  if (key && !headers.has('X-API-Key')) headers.set('X-API-Key', key);
+  const resp = await _nativeFetch(url, { ...init, headers, credentials: 'include' });
+  if (resp.status === 401 && !key) {
+    const me = await _nativeFetch(`${API}/auth/me`, {credentials:'include'})
+      .then(r => r.ok ? r.json() : null).catch(() => null);
+    if (!me || (me.plan !== 'local' && me.authenticated !== true)) {
+      window.location.href = window._pfx + '/ui/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+  }
+  return resp;
+};
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showTab(btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('panel-' + btn.dataset.tab);
+  if (panel) panel.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+async function init() {
+  const me = await fetch(`${API}/auth/me`, {credentials:'include'}).then(r=>r.json()).catch(()=>null);
+  if (!me || me.detail) {
+    document.getElementById('profile-name').textContent = 'Local mode';
+    document.getElementById('profile-email').textContent = 'Dewie Local Catalog';
+    document.getElementById('detail-provider').textContent = 'local';
+    loadKeys();
+    return;
+  }
+  if (me.activation_status === 'pending' || me.activation_status === 'rejected') {
+    window.location.href = window._pfx + '/ui/pending.html'; return;
+  }
+
+  document.getElementById('profile-name').textContent = me.name || me.email || '—';
+  document.getElementById('profile-email').textContent = me.email || '';
+  const authMethodLabels = {google: 'Google OAuth', password: 'Password', local: 'Local mode'};
+  document.getElementById('detail-provider').textContent = authMethodLabels[me.auth_method] || me.auth_method || '—';
+
+  const avatarEl = document.getElementById('avatar-img');
+  if (me.picture) {
+    avatarEl.outerHTML = `<img class="avatar" id="avatar-img" src="${esc(me.picture)}" alt="avatar" />`;
+  } else {
+    avatarEl.textContent = (me.name || me.email || '?')[0].toUpperCase();
+  }
+
+  const badgesEl = document.getElementById('profile-badges');
+  const badges = [];
+  if (me.plan && me.plan !== 'local') badges.push(`<span class="badge badge-plan">${esc(me.plan)}</span>`);
+  if (me.is_admin) badges.push(`<span class="badge badge-admin">admin</span>`);
+  badges.push(`<span class="badge badge-${me.activation_status}">${esc(me.activation_status)}</span>`);
+  badgesEl.innerHTML = badges.join('');
+
+  if (me.is_admin) document.getElementById('nav-admin-link').style.display = 'inline-flex';
+  if (me.auth_method === 'password') document.getElementById('sidebar-security').style.display = 'block';
+
+  loadKeys();
+}
+
+// ── SOURCES ───────────────────────────────────────────────────────────────────
+
+async function loadSources() {
+  const el = document.getElementById('sources-list');
+  const docs = await fetch(`${API}/user/uploads`, {credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if (!docs.length) {
+    el.innerHTML = '<div class="empty">No documents yet. Add a URL above.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <table class="tbl">
+      <thead><tr>
+        <th>Title</th>
+        <th>Status</th>
+        <th>Ingested</th>
+      </tr></thead>
+      <tbody>${docs.map(d => `
+        <tr>
+          <td>
+            <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">${esc(d.title || '—')}</div>
+            <div class="tbl-url">${esc(d.url)}</div>
+          </td>
+          <td><span class="status-badge status-${d.status}">${esc(d.status)}</span></td>
+          <td style="font-size:0.75rem;color:var(--dim);font-family:var(--mono);white-space:nowrap">${(d.ingested_at||'').slice(0,10)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function ingestUrl() {
+  const url = document.getElementById('ingest-url').value.trim();
+  const msg = document.getElementById('ingest-msg');
+  if (!url) return;
+  msg.style.color = 'var(--dim)';
+  msg.textContent = 'Submitting…';
+  const res = await fetch(`${API}/user/ingest`, {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({url})
+  }).then(r=>r.json()).catch(()=>null);
+  if (res && res.doc_id) {
+    msg.style.color = 'var(--green)';
+    msg.textContent = '✓ Queued for ingestion';
+    document.getElementById('ingest-url').value = '';
+    setTimeout(() => loadSources(), 1500);
+  } else {
+    msg.style.color = '#f87171';
+    msg.textContent = res?.detail || 'Failed to ingest URL';
+  }
+}
+
+// ── FEEDS ─────────────────────────────────────────────────────────────────────
+
+async function loadFeeds() {
+  const el = document.getElementById('feeds-list');
+  const feeds = await fetch(`${API}/feeds`, {credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if (!feeds.length) {
+    el.innerHTML = '<div class="empty">No feeds yet. Subscribe to an RSS or Atom feed above.</div>';
+    return;
+  }
+  el.innerHTML = feeds.map(f => `
+    <div class="card" style="display:flex;align-items:center;gap:12px;padding:14px 18px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:500;margin-bottom:2px">${esc(f.name || f.url)}</div>
+        <div style="font-size:0.75rem;color:var(--dim);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.url)}</div>
+      </div>
+      <button class="btn-danger-sm" onclick="removeFeed('${esc(f.id || f.url)}')">Remove</button>
+    </div>`).join('');
+}
+
+async function addFeed() {
+  const url = document.getElementById('feed-url').value.trim();
+  const msg = document.getElementById('feed-msg');
+  if (!url) return;
+  msg.style.color = 'var(--dim)';
+  msg.textContent = 'Subscribing…';
+  const res = await fetch(`${API}/feeds`, {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({url, name: url})
+  }).then(r=>r.json()).catch(()=>null);
+  if (res && !res.detail) {
+    msg.style.color = 'var(--green)';
+    msg.textContent = '✓ Feed added';
+    document.getElementById('feed-url').value = '';
+    loadFeeds();
+  } else {
+    msg.style.color = '#f87171';
+    msg.textContent = res?.detail || 'Failed to add feed';
+  }
+}
+
+async function removeFeed(id) {
+  if (!confirm('Remove this feed?')) return;
+  await fetch(`${API}/feeds/${encodeURIComponent(id)}`, {method:'DELETE', credentials:'include'});
+  loadFeeds();
+}
+
+// ── API KEYS ──────────────────────────────────────────────────────────────────
+
+async function loadKeys() {
+  const keys = await fetch(`${API}/user/api-keys`, {credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  const el = document.getElementById('keys-list');
+  if (!Array.isArray(keys) || !keys.length) {
+    el.innerHTML = '<div class="empty">No API keys yet. Create one below.</div>'; return;
+  }
+  el.innerHTML = keys.map(k => `
+    <div class="key-row">
+      <div class="key-info">
+        <div class="key-name">${esc(k.name || 'Unnamed')}</div>
+        <div class="key-prefix">${esc(k.key_prefix || k.prefix)}••••••••</div>
+        <div class="key-date">Created ${esc((k.created_at||'').slice(0,10))}</div>
+      </div>
+      <div class="key-scopes">${esc((k.scopes||[]).join(', ')||'read')}</div>
+      <button class="btn-danger-sm" onclick="revokeKey('${k.id}')">Revoke</button>
+    </div>`).join('');
+}
+
+async function createKey() {
+  const name = document.getElementById('new-key-name').value.trim();
+  if (!name) { document.getElementById('key-error').textContent = 'Enter a key name.'; return; }
+  document.getElementById('key-error').textContent = '';
+  // Use _nativeFetch to avoid injecting a stored API key — this endpoint requires
+  // session auth only, so sending an API key would cause a 403 with no redirect.
+  const r = await _nativeFetch(`${API}/user/api-keys`, {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, scopes:['read']})
+  }).catch(()=>null);
+  if (!r) { document.getElementById('key-error').textContent = 'Failed to create key.'; return; }
+  if (r.status === 401 || r.status === 403) {
+    window.location.href = window._pfx + '/ui/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+  const res = await r.json().catch(()=>null);
+  if (!res || (!res.raw_key && !res.key)) {
+    document.getElementById('key-error').textContent = 'Failed to create key.'; return;
+  }
+  const rawKey = res.raw_key || res.key;
+  const el = document.getElementById('key-revealed');
+  el.innerHTML = `<div class="key-revealed"><div class="key-revealed-label">✓ Copy now — shown once only</div>${esc(rawKey)}</div>`;
+  el.style.display = 'block';
+  document.getElementById('new-key-name').value = '';
+  loadKeys();
+}
+
+async function revokeKey(id) {
+  if (!confirm('Revoke this key? Cannot be undone.')) return;
+  await fetch(`${API}/user/api-keys/${id}`, {method:'DELETE', credentials:'include'});
+  loadKeys();
+}
+
+// ── CHANGE PASSWORD ───────────────────────────────────────────────────────────
+
+async function changePassword() {
+  const curr = document.getElementById('curr-pass').value;
+  const newP = document.getElementById('new-pass').value;
+  const conf = document.getElementById('confirm-pass').value;
+  const errEl = document.getElementById('password-error');
+  const okEl  = document.getElementById('password-success');
+  errEl.textContent = ''; okEl.style.display = 'none';
+  if (!curr) { errEl.textContent = 'Enter your current password.'; return; }
+  if (newP.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; return; }
+  if (newP !== conf) { errEl.textContent = 'Passwords do not match.'; return; }
+  const res = await fetch(`${API}/auth/change-password`, {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({current_password: curr, new_password: newP})
+  }).then(r=>r.json()).catch(()=>null);
+  if (!res || res.detail) { errEl.textContent = res?.detail || 'Failed to change password.'; return; }
+  document.getElementById('curr-pass').value = '';
+  document.getElementById('new-pass').value = '';
+  document.getElementById('confirm-pass').value = '';
+  okEl.style.display = 'inline';
+}
+
+// ── QUERY HISTORY ─────────────────────────────────────────────────────────────
+
+async function loadHistory() {
+  const el = document.getElementById('history-list');
+  const res = await fetch(`${API}/me/queries`, {credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if (!res || !Array.isArray(res) || !res.length) {
+    el.innerHTML = '<div class="empty">No queries yet. Run your first query from the <a href="/ui/app.html" style="color:var(--accent-light)">app</a>.</div>';
+    return;
+  }
+  el.innerHTML = res.map(q => {
+    const ts = q.ts ? new Date(q.ts).toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+    return `<div class="history-item">
+      <div class="history-header">
+        <div class="history-query">${esc(q.question || '—')}</div>
+        <div class="history-time">${ts}</div>
+      </div>
+      <div class="history-meta">
+        <span>source: ${esc(q.source||'api')}</span>
+        ${q.hops ? `<span>${q.hops} hops</span>` : ''}
+        ${q.elapsed_ms ? `<span>${q.elapsed_ms}ms</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function signOut() {
+  await fetch(`${API}/auth/logout`, {method:'POST', credentials:'include'});
+  window.location.href = window._pfx + '/ui/login.html';
+}
+
+// ── MCP SETUP ─────────────────────────────────────────────────────────────────
+
+let _mcpClient = 'claude-desktop';
+let _mcpKeys = [];
+
+async function loadMcp() {
+  // Reuse keys already loaded, or fetch fresh
+  const keys = await fetch(`${API}/user/api-keys`, {credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  _mcpKeys = Array.isArray(keys) ? keys : [];
+  const sel = document.getElementById('mcp-key-select');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— select a key —</option>' +
+    _mcpKeys.map(k => `<option value="${esc(k.raw_key||k.key_prefix||k.id)}" data-prefix="${esc(k.key_prefix||'')}">
+      ${esc(k.name||'Unnamed')} (${esc(k.key_prefix||'')}••••)
+    </option>`).join('');
+  if (prev) sel.value = prev;
+  renderMcpConfig();
+}
+
+function selectMcpClient(btn) {
+  document.querySelectorAll('.mcp-client-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _mcpClient = btn.dataset.client;
+  renderMcpConfig();
+}
+
+function renderMcpConfig() {
+  const apiKey = document.getElementById('mcp-key-select').value.trim();
+  const hint = document.getElementById('mcp-key-hint');
+  const card = document.getElementById('mcp-config-card');
+
+  if (!apiKey) {
+    hint.textContent = 'Select an API key above to generate your config.';
+    card.style.display = 'none';
+    return;
+  }
+  hint.textContent = '';
+  card.style.display = 'block';
+
+  const apiUrl = window.location.origin;
+  const pre = document.getElementById('mcp-config-pre');
+  const label = document.getElementById('mcp-config-label');
+  const dlBtn = document.getElementById('mcp-download-btn');
+  const cfgHint = document.getElementById('mcp-config-hint');
+
+  let config, hintText, labelText, showDownload = false;
+
+  const stdioBase = {
+    mcpServers: {
+      dewie: {
+        command: 'dewie-mcp',
+        env: { DEWIE_API_URL: apiUrl, DEWIE_API_KEY: apiKey }
+      }
+    }
+  };
+
+  if (_mcpClient === 'claude-desktop') {
+    config = JSON.stringify(stdioBase, null, 2);
+    labelText = 'claude_desktop_config.json';
+    hintText = 'Merge into ~/Library/Application Support/Claude/claude_desktop_config.json (macOS) or %APPDATA%\\Claude\\claude_desktop_config.json (Windows). Then restart Claude Desktop.';
+    showDownload = true;
+  } else if (_mcpClient === 'cursor') {
+    config = JSON.stringify({ mcpServers: stdioBase.mcpServers }, null, 2);
+    labelText = '.cursor/mcp.json';
+    hintText = 'Save as .cursor/mcp.json in your project root, or merge into ~/.cursor/mcp.json for global access.';
+  } else if (_mcpClient === 'vscode') {
+    config = JSON.stringify({ 'mcp.servers': { dewie: stdioBase.mcpServers.dewie } }, null, 2);
+    labelText = '.vscode/settings.json';
+    hintText = 'Merge into .vscode/settings.json in your project, or into User Settings for global access. Requires the MCP extension.';
+  } else if (_mcpClient === 'cline') {
+    config = JSON.stringify({ mcpServers: stdioBase.mcpServers }, null, 2);
+    labelText = 'Cline MCP config';
+    hintText = 'Add to your Cline MCP servers config. Open Cline → Settings → MCP Servers → Edit Config.';
+  } else if (_mcpClient === 'claude-code') {
+    config = `# Run once to register Dewie in Claude Code:\nclaude mcp add --transport stdio \\\n  -e DEWIE_API_URL=${apiUrl} \\\n  -e DEWIE_API_KEY=${apiKey} \\\n  dewie -- dewie-mcp`;
+    labelText = 'Claude Code CLI';
+    hintText = 'Run this command once in your terminal. The server will be available in all future Claude Code sessions.';
+  } else {
+    config = `# HTTP transport — call directly from any MCP client\n# Endpoint: ${apiUrl}/api/mcp\n# Auth: Authorization: Bearer ${apiKey}\n\n# Example (curl):\ncurl -X POST ${apiUrl}/api/mcp \\\n  -H "Authorization: Bearer ${apiKey}" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"tool":"dewie_search","input":{"query":"your question"}}\'`;
+    labelText = 'HTTP endpoint';
+    hintText = 'The /api/mcp endpoint accepts POST requests with a Bearer token. Compatible with any HTTP-transport MCP client.';
+  }
+
+  pre.textContent = config;
+  label.textContent = labelText;
+  cfgHint.textContent = hintText;
+  dlBtn.style.display = showDownload ? 'inline' : 'none';
+}
+
+function copyMcpConfig() {
+  const text = document.getElementById('mcp-config-pre').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('mcp-copy-btn');
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000);
+  });
+}
+
+function downloadMcpConfig() {
+  const text = document.getElementById('mcp-config-pre').textContent;
+  const blob = new Blob([text], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'claude_desktop_config.json';
+  a.click();
+}
+
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

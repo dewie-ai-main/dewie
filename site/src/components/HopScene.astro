@@ -1,0 +1,244 @@
+---
+// Multi-hop retrieval -> converge -> understand.
+// Hop 1: a row of white docs is searched, one is picked. Hop 2: a connector
+// follows that lead to a second row, two more are picked. The unselected docs
+// fade; the three picks converge into a single document; it moves into the
+// agent and a brain rises above it. All teal. Glyphs are inlined (NOT set:html)
+// so the scoped styles actually bind and the docs render white.
+// CSS keyframes on one 12s timeline. Reduced-motion safe.
+// `footnote` renders the caption small/muted (used when the gif sits beside
+// its own explanatory copy and the caption is just a footnote).
+const { footnote = false, compact = false } = Astro.props;
+---
+{/* each .doc holds: a white page rect + three grey text lines */}
+
+<figure class:list={["hop", { "hop--compact": compact }]}>
+  <svg viewBox="0 0 660 320" role="img" aria-label="An agent searches a row of documents and picks one, follows a link to a second row and picks two more, then the selected documents merge into a single document that moves into the agent as a brain appears above it — multi-hop retrieval turning into understanding.">
+    <!-- comprehension ring (behind everything) -->
+    <circle class="ring" cx="66" cy="164" r="12" />
+
+    <!-- the hop connector: picked row-A doc -> row B -->
+    <path class="link" pathLength="1" d="M258,100 C 272,150 288,180 300,208" />
+
+    <!-- row A (top) -->
+    <g transform="translate(160,44)"><g class="doc d-a1"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+    <g transform="translate(236,44)"><g class="doc d-a2"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+    <g transform="translate(312,44)"><g class="doc d-a3"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+    <g transform="translate(388,44)"><g class="doc d-a4"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+
+    <!-- row B (lower) -->
+    <g transform="translate(180,214)"><g class="doc d-b1"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+    <g transform="translate(272,214)"><g class="doc d-b2"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+    <g transform="translate(364,214)"><g class="doc d-b3"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+    <g transform="translate(456,214)"><g class="doc d-b4"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+
+    <!-- the single merged document (appears at center, then moves into the agent) -->
+    <g transform="translate(278,122)"><g class="doc merged"><rect class="doc-bg" width="44" height="56" rx="5"/><line class="dl" x1="9" y1="15" x2="35" y2="15"/><line class="dl" x1="9" y1="25" x2="35" y2="25"/><line class="dl" x1="9" y1="35" x2="28" y2="35"/></g></g>
+
+    <!-- agent (vector icon, not an emoji) -->
+    <g transform="translate(64,160)"><g class="robot">
+      <line class="icon-stroke" x1="0" y1="-12" x2="0" y2="-19"/>
+      <circle class="icon-dot" cx="0" cy="-21.5" r="2.6"/>
+      <rect class="icon-fill" x="-16" y="-12" width="32" height="27" rx="6"/>
+      <line class="icon-stroke" x1="-19" y1="-2" x2="-19" y2="5"/>
+      <line class="icon-stroke" x1="19" y1="-2" x2="19" y2="5"/>
+      <circle class="icon-dot" cx="-6.5" cy="-2" r="3.1"/>
+      <circle class="icon-dot" cx="6.5" cy="-2" r="3.1"/>
+      <rect class="icon-stroke" x="-6" y="5" width="12" height="4.5" rx="2"/>
+    </g></g>
+
+    <!-- comprehension: a stylised brain -->
+    <g transform="translate(66,112)"><g class="brain">
+      <ellipse class="icon-fill" cx="0" cy="0" rx="13" ry="10.5"/>
+      <path class="icon-thin" d="M0,-10 C 3,-5 -3,-2 0,2 C 3,6 -1,8 0,10.5"/>
+      <path class="icon-thin" d="M-4,-6.5 C -9,-4.5 -9,0.5 -4.5,1.8"/>
+      <path class="icon-thin" d="M-3.5,4 C -7.5,5 -7.5,8 -3,8.5"/>
+      <path class="icon-thin" d="M4,-6.5 C 9,-4.5 9,0.5 4.5,1.8"/>
+      <path class="icon-thin" d="M3.5,4 C 7.5,5 7.5,8 3,8.5"/>
+    </g></g>
+
+    <!-- magnifier -->
+    <g transform="translate(160,84)"><g class="mag">
+      <circle class="icon-lens" cx="-2" cy="-2" r="8"/>
+      <line class="icon-handle" x1="3.7" y1="3.7" x2="10.5" y2="10.5"/>
+    </g></g>
+  </svg>
+  <figcaption class:list={["hop-cap", { "hop-cap--foot": footnote }]}>
+    <strong>Multi-hop retrieval → understanding</strong> — your agent follows leads across
+    the corpus, gathers what matters into one, and reads it. Not one lookup and done.
+  </figcaption>
+</figure>
+
+<style>
+  .hop { margin: 0 auto; max-width: 640px; text-align: center; }
+  .hop--compact { max-width: 380px; }
+  .hop svg { width: 100%; height: auto; }
+  .hop-cap {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--sl-color-gray-2);
+    max-width: 58ch;
+    margin-inline: auto;
+  }
+  .hop-cap strong { color: var(--sl-color-text-accent); }
+  .hop-cap--foot {
+    font-size: 0.76rem;
+    line-height: 1.45;
+    opacity: 0.8;
+    margin-top: 0.35rem;
+  }
+
+  /* white document glyph */
+  .doc-bg { fill: #f5f7fb; stroke: #c9d2e2; stroke-width: 1.2; }
+  .dl { stroke: #7c869c; stroke-width: 2; stroke-linecap: round; opacity: 0.9; }
+  .doc { transform-box: fill-box; transform-origin: center; opacity: 0; }
+
+  .ring { fill: none; stroke: #7ff0e8; stroke-width: 2.2; transform-box: fill-box; transform-origin: center; opacity: 0; }
+  .link {
+    fill: none; stroke: #7ff0e8; stroke-width: 1.6; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0;
+  }
+
+  .robot { transform-box: fill-box; transform-origin: center; }
+  .brain { transform-box: fill-box; transform-origin: center; opacity: 0; }
+  .mag { transform-box: fill-box; transform-origin: center; opacity: 0; }
+
+  /* proper vector icons — no unicode emoji */
+  .icon-stroke { fill: none; stroke: #7ff0e8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-thin { fill: none; stroke: #7ff0e8; stroke-width: 1.4; stroke-linecap: round; }
+  .icon-fill { fill: #0d1b33; stroke: #7ff0e8; stroke-width: 2; }
+  .icon-dot { fill: #7ff0e8; }
+  .icon-lens { fill: none; stroke: #7ff0e8; stroke-width: 2.4; }
+  .icon-handle { fill: none; stroke: #7ff0e8; stroke-width: 3; stroke-linecap: round; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .d-a1, .d-a3, .d-a4 { animation: aIn 12s linear infinite; }
+    .d-a2 { animation: aPick 12s ease-in-out infinite, glowA 12s linear infinite; }
+    .d-b2, .d-b4 { animation: bIn 12s linear infinite; }
+    .d-b1 { animation: bPick1 12s ease-in-out infinite, glowB 12s linear infinite; }
+    .d-b3 { animation: bPick3 12s ease-in-out infinite, glowB 12s linear infinite; }
+    .merged { animation: mergedMove 12s ease-in-out infinite; }
+    .link { animation: hop 12s linear infinite; }
+    .mag { animation: magnify 12s linear infinite; }
+    .brain { animation: brainUp 12s ease-out infinite; }
+    .ring { animation: understandRing 12s linear infinite; }
+    .robot { animation: robotPulse 12s ease-in-out infinite, robotGlow 12s linear infinite; }
+  }
+
+  /* reduced motion: show both rows and the understood state, no motion */
+  @media (prefers-reduced-motion: reduce) {
+    .doc:not(.merged) { opacity: 1; }
+    .brain { opacity: 1; }
+  }
+
+  /* ---- row A ---- */
+  @keyframes aIn {
+    0% { opacity: 0; transform: translateX(210px); }
+    7% { opacity: 1; transform: translateX(0); }
+    62% { opacity: 1; transform: translateX(0); }
+    70%, 100% { opacity: 0; transform: translateX(0); }
+  }
+  @keyframes aPick {
+    0% { opacity: 0; transform: translateX(210px); }
+    7% { opacity: 1; transform: translate(0, 0); }
+    28% { transform: translate(0, 0); }
+    32% { transform: translate(0, -8px); }
+    66% { opacity: 1; transform: translate(0, -8px); }
+    82% { opacity: 0; transform: translate(42px, 78px) scale(0.85); }
+    100% { opacity: 0; }
+  }
+  @keyframes glowA {
+    0%, 26% { filter: none; }
+    32% { filter: drop-shadow(0 0 6px #7ff0e8); }
+    66% { filter: drop-shadow(0 0 6px #7ff0e8); }
+    74%, 100% { filter: none; }
+  }
+
+  /* ---- row B (slides in after the hop) ---- */
+  @keyframes bIn {
+    0%, 30% { opacity: 0; transform: translateX(210px); }
+    39% { opacity: 1; transform: translateX(0); }
+    62% { opacity: 1; transform: translateX(0); }
+    70%, 100% { opacity: 0; transform: translateX(0); }
+  }
+  @keyframes bPick1 {
+    0%, 30% { opacity: 0; transform: translateX(210px); }
+    39% { opacity: 1; transform: translate(0, 0); }
+    58% { transform: translate(0, 0); }
+    61% { transform: translate(0, -8px); }
+    68% { opacity: 1; transform: translate(0, -8px); }
+    82% { opacity: 0; transform: translate(98px, -92px) scale(0.85); }
+    100% { opacity: 0; }
+  }
+  @keyframes bPick3 {
+    0%, 30% { opacity: 0; transform: translateX(210px); }
+    39% { opacity: 1; transform: translate(0, 0); }
+    58% { transform: translate(0, 0); }
+    61% { transform: translate(0, -8px); }
+    68% { opacity: 1; transform: translate(0, -8px); }
+    82% { opacity: 0; transform: translate(-86px, -92px) scale(0.85); }
+    100% { opacity: 0; }
+  }
+  @keyframes glowB {
+    0%, 56% { filter: none; }
+    61% { filter: drop-shadow(0 0 6px #7ff0e8); }
+    68% { filter: drop-shadow(0 0 6px #7ff0e8); }
+    76%, 100% { filter: none; }
+  }
+
+  /* ---- the three picks merge into one, which moves into the agent ---- */
+  @keyframes mergedMove {
+    0%, 79% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+    83% { opacity: 1; transform: translate(0, 0) scale(1); }
+    86% { opacity: 1; transform: translate(0, 0) scale(1); }
+    94% { opacity: 0; transform: translate(-234px, 14px) scale(0.2); }
+    100% { opacity: 0; }
+  }
+
+  /* hop connector draws from the picked row-A doc down to row B */
+  @keyframes hop {
+    0%, 30% { opacity: 0; stroke-dashoffset: 1; }
+    32% { opacity: 0.7; stroke-dashoffset: 1; }
+    40% { opacity: 0.7; stroke-dashoffset: 0; }
+    62% { opacity: 0.7; stroke-dashoffset: 0; }
+    70%, 100% { opacity: 0; }
+  }
+
+  /* magnifier: sweeps row A, drops to row B, sweeps that too */
+  @keyframes magnify {
+    0%, 9% { opacity: 0; transform: translate(0, 0); }
+    12% { opacity: 1; transform: translate(0, 0); }
+    24% { opacity: 1; transform: translate(250px, 0); }
+    28% { opacity: 0.4; transform: translate(250px, 0); }
+    42% { opacity: 1; transform: translate(20px, 170px); }
+    56% { opacity: 1; transform: translate(330px, 170px); }
+    60%, 100% { opacity: 0; }
+  }
+
+  /* understanding: brain rises, agent pulses + glows, ring bursts */
+  @keyframes brainUp {
+    0%, 84% { opacity: 0; transform: translateY(8px) scale(0.5); }
+    90% { opacity: 1; transform: translateY(-6px) scale(1); }
+    96% { opacity: 1; transform: translateY(-8px) scale(1); }
+    99%, 100% { opacity: 0; }
+  }
+  @keyframes understandRing {
+    0%, 84% { opacity: 0; transform: scale(0.3); }
+    88% { opacity: 0.7; transform: scale(0.7); }
+    98% { opacity: 0; transform: scale(3.2); }
+    100% { opacity: 0; }
+  }
+  @keyframes robotPulse {
+    0%, 84% { transform: scale(1); }
+    90% { transform: scale(1.08); }
+    96% { transform: scale(1); }
+    100% { transform: scale(1); }
+  }
+  @keyframes robotGlow {
+    0%, 84% { filter: none; }
+    90% { filter: drop-shadow(0 0 10px #7ff0e8); }
+    97% { filter: drop-shadow(0 0 6px #7ff0e8); }
+    100% { filter: none; }
+  }
+</style>

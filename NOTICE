@@ -1,0 +1,194 @@
+Dewie
+Copyright 2026 Alexander Atkins
+
+This product includes software developed at
+Dewie AI (https://dewie.ai).
+
+Licensed under the Functional Source License, Version 1.1, ALv2 Future
+License (FSL-1.1-ALv2). See the LICENSE file for the full license text, or
+https://fsl.software for the canonical template.
+
+Each version of this software becomes available under the Apache License,
+Version 2.0, two years after its release date.
+
+=================================================================
+THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
+=================================================================
+
+Dewie incorporates components from the projects listed below.
+The original copyright notices and the licenses under which those
+components are distributed are included below.
+
+---------------------------------
+click
+---------------------------------
+Copyright (c) 2014 by Pallets Contributors
+License: BSD-3-Clause
+https://github.com/pallets/click
+
+---------------------------------
+questionary
+---------------------------------
+Copyright (c) 2016-present Tom Bocklisch
+License: Apache-2.0
+https://github.com/tmbo/questionary
+
+---------------------------------
+FastAPI
+---------------------------------
+Copyright (c) 2018 Sebastián Ramírez
+License: MIT
+https://github.com/fastapi/fastapi
+
+---------------------------------
+MCP (Model Context Protocol SDK)
+---------------------------------
+Copyright (c) 2024 Anthropic, PBC
+License: MIT
+https://github.com/modelcontextprotocol/python-sdk
+
+---------------------------------
+uvicorn
+---------------------------------
+Copyright © 2017-present, Encode OSS Ltd.
+License: BSD-3-Clause
+https://github.com/encode/uvicorn
+
+---------------------------------
+SQLAlchemy
+---------------------------------
+Copyright (c) 2005-2024 The SQLAlchemy Authors and Contributors
+License: MIT
+https://www.sqlalchemy.org
+
+---------------------------------
+asyncpg
+---------------------------------
+Copyright (c) 2016-present, MagicStack Inc.
+License: Apache-2.0
+https://github.com/MagicStack/asyncpg
+
+---------------------------------
+aiosqlite
+---------------------------------
+Copyright (c) 2022 Amethyst Reese
+License: MIT
+https://github.com/omnilib/aiosqlite
+
+---------------------------------
+redis (hiredis)
+---------------------------------
+Copyright (c) 2010-2024, Redis Ltd.
+hiredis Copyright (c) 2010-2024, Redis Ltd.
+License: BSD-3-Clause
+https://github.com/redis/redis-py
+https://github.com/redis/hiredis
+
+---------------------------------
+feedparser
+---------------------------------
+Copyright (C) 2010-2025 Kurt McKee
+Portions Copyright (c) 2002-2008 Mark Pilgrim
+License: BSD-2-Clause
+https://github.com/kurtmckee/feedparser
+
+---------------------------------
+httpx
+---------------------------------
+Copyright (c) 2019-2024, Encode OSS Ltd
+License: BSD-3-Clause
+https://github.com/encode/httpx
+
+---------------------------------
+watchdog
+---------------------------------
+Copyright 2018-2024 Mickaël Schoentgen & contributors
+Copyright 2014-2018 Thomas Amland & contributors
+Copyright 2012-2014 Google, Inc.
+Copyright 2011-2012 Yesudeep Mangalapilly
+License: Apache-2.0
+https://github.com/gorakhargosh/watchdog
+
+---------------------------------
+trafilatura
+---------------------------------
+Copyright (c) 2018-2024, Adrien Barbaresi
+License: Apache-2.0
+https://github.com/adbar/trafilatura
+
+---------------------------------
+markitdown
+---------------------------------
+Copyright (c) Microsoft Corporation
+License: MIT
+https://github.com/microsoft/markitdown
+
+---------------------------------
+beautifulsoup4
+---------------------------------
+Copyright (c) 2004-2025, Leonard Richardson and contributors
+License: BSD-3-Clause
+https://www.crummy.com/software/BeautifulSoup/
+
+---------------------------------
+lxml
+---------------------------------
+Copyright (c) 2004-2025, lxml authors and contributors
+License: BSD-3-Clause
+https://lxml.de
+
+---------------------------------
+bcrypt
+---------------------------------
+Copyright (c) The Python Cryptographic Authority and individual contributors
+License: Apache-2.0
+https://github.com/pyca/bcrypt
+
+---------------------------------
+PyJWT
+---------------------------------
+Copyright (c) 2015-2022 Jose Padilla
+License: MIT
+https://github.com/jpadilla/pyjwt
+
+---------------------------------
+Pydantic
+---------------------------------
+Copyright (c) 2017-2025 Pydantic Services Ltd
+License: MIT
+https://github.com/pydantic/pydantic
+
+---------------------------------
+pydantic-settings
+---------------------------------
+Copyright (c) 2022-2025, Samuel Colvin
+License: MIT
+https://github.com/pydantic/pydantic-settings
+
+---------------------------------
+python-dotenv
+---------------------------------
+Copyright (c) 2014, Saurabh Kumar
+License: BSD-3-Clause
+https://github.com/theskumar/python-dotenv
+
+---------------------------------
+spacy
+---------------------------------
+Copyright (c) 2015-2026, ExplosionAI GmbH
+License: MIT
+https://github.com/explosion/spaCy
+
+---------------------------------
+youtube-transcript-api
+---------------------------------
+Copyright (c) 2020-2024, Daniel Villanueva
+License: MIT
+https://github.com/Kakulukian/youtube-transcript-api
+
+---------------------------------
+yt-dlp
+---------------------------------
+Copyright (c) 2006-2024, YTDLP
+License: Unlicense
+https://github.com/yt-dlp/yt-dlp

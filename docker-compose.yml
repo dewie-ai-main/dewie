@@ -1,0 +1,94 @@
+# docker-compose.yml — Dewie quick-start
+#
+# Usage:
+#   git clone https://github.com/dewie-ai-main/dewie
+#   cd dewie
+#   cp .env.example .env
+#   # Edit .env: set OPENAI_API_KEY and POSTGRES_PASSWORD
+#   docker compose up
+#
+# On first run the app container will print a generated ADMIN_KEY and JWT_SECRET
+# to the log. Copy them into your .env so they persist across restarts.
+#
+# Access:
+#   UI:     http://localhost:10946/ui/app.html
+#   API:    http://localhost:10946
+#   Health: http://localhost:10946/health
+
+services:
+
+  # ── Postgres + pgvector ─────────────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: dewie-postgres
+    restart: unless-stopped
+    command: postgres -c max_connections=200 -c shared_buffers=256MB
+    environment:
+      POSTGRES_USER: dewie
+      POSTGRES_DB: dewie
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dewie}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"   # localhost only — not exposed to the internet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dewie"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Dewie API + enrichment worker ───────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dewie/app:latest
+    container_name: dewie-app
+    restart: unless-stopped
+    ports:
+      - "${DEWIE_PORT:-10946}:10946"
+    environment:
+      # DB — host/user/db match the postgres service above; password stays in sync via the shared var
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: dewie
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dewie}
+      POSTGRES_DB: dewie
+      REDIS_URL: ""
+      LLM_QUEUE_BACKEND: memory
+      # Secrets — entrypoint.sh generates these on first run and prints them if unset
+      JWT_SECRET: ${JWT_SECRET:-}
+      ADMIN_KEY: ${ADMIN_KEY:-}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-}
+      # Auth — false by default for local use; set AUTH_ENABLED=true for production
+      AUTH_ENABLED: ${AUTH_ENABLED:-false}
+      # LLM provider (set your key in .env)
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # Embeddings
+      EMBED_PROVIDER: ${EMBED_PROVIDER:-openai}
+      EMBED_MODEL: ${EMBED_MODEL:-text-embedding-3-small}
+      # Subsystems
+      ENABLE_ENRICHMENT: "true"
+      ENABLE_INGESTION: "true"
+      ENABLE_POLLER: "true"
+      DEWIE_DATA_DIR: /app/data
+      PYTHONPATH: /app/src
+    volumes:
+      - dewie_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:10946/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  dewie_data:

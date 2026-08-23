@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+<script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><circle cx='10' cy='10' r='10' fill='%236366f1'/><path d='M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2 2 0 110 4 2 2 0 010-4zm0 9.5c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z' fill='white'/></svg>" type="image/svg+xml" /><title>Dewie — Find Similar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07070f;--bg2:#0d0d1a;--bg3:#12121f;--border:var(--border);--purple:var(--purple);--purple-lo:var(--purple-lo);--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--dim:#64748b;--xdim:#334155;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px);background-size:48px 48px;}
+nav{position:sticky;top:0;z-index:100;background:rgba(7,7,15,0.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
+.nav-logo-mark{width:28px;height:28px;background:var(--purple);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.nav-logo-mark svg{width:15px;height:15px;fill:#fff;}
+.nav-logo-text{font-family:var(--mono);font-size:0.9rem;font-weight:500;color:var(--text);}
+.nav-logo-text span{color:var(--purple);}
+.nav-badge{font-size:0.68rem;font-family:var(--mono);color:var(--accent-light);background:var(--purple-lo);border:1px solid var(--border);border-radius:4px;padding:2px 7px;margin-left:8px;}
+.nav-links{display:flex;align-items:center;gap:2px;}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.nav-link{font-size:0.82rem;color:var(--dim);text-decoration:none;padding:5px 12px;border-radius:6px;transition:all 0.15s;}
+.nav-link:hover{color:var(--text);background:var(--purple-lo);}
+.nav-link.active{color:var(--text);background:var(--purple-lo);}
+.page{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:32px 24px;}
+.search-section{margin-bottom:28px;}
+.search-row{display:flex;gap:10px;}
+.input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-size:0.95rem;font-family:var(--sans);outline:none;transition:border-color 0.15s;}
+.input:focus{border-color:var(--purple);}
+.input::placeholder{color:var(--xdim);}
+.btn{padding:12px 22px;border-radius:8px;border:none;cursor:pointer;font-size:0.84rem;font-weight:500;font-family:var(--sans);transition:all 0.15s;}
+.btn-primary{background:var(--purple);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--purple-dark);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+.breadcrumb{display:flex;align-items:center;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.bc-item{font-size:0.75rem;font-family:var(--mono);color:var(--dim);cursor:pointer;padding:3px 8px;border-radius:5px;background:var(--bg2);border:1px solid var(--border);}
+.bc-item:hover{color:var(--text);}
+.bc-item.current{color:var(--accent-light);border-color:var(--border-hi);}
+.bc-sep{color:var(--xdim);font-size:0.75rem;}
+.seed-card{background:var(--bg2);border:2px solid var(--purple);border-radius:12px;padding:20px 24px;margin-bottom:24px;}
+.seed-label{font-size:0.65rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:var(--purple);margin-bottom:8px;}
+.seed-title{font-size:1.05rem;font-weight:600;margin-bottom:4px;}
+.seed-source{font-size:0.75rem;color:var(--dim);font-family:var(--mono);margin-bottom:8px;}
+.seed-summary{font-size:0.82rem;color:var(--dim);line-height:1.55;}
+.seed-actions{display:flex;gap:8px;margin-top:12px;}
+.btn-sm{font-size:0.72rem;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--dim);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;}
+.btn-sm:hover{border-color:var(--border-hi);color:var(--text);}
+.btn-sm.active{background:var(--purple-lo);border-color:var(--border-hi);color:var(--accent-light);}
+.section-label{font-size:0.72rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.neighbors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:28px;}
+.neighbor-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:6px;}
+.neighbor-card:hover{border-color:var(--border-hi);background:var(--purple-lo);}
+.neighbor-card.pinned{border-color:var(--yellow);background:rgba(245,158,11,0.04);}
+.nc-title{font-size:0.86rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nc-source{font-size:0.7rem;color:var(--dim);font-family:var(--mono);}
+.nc-summary{font-size:0.75rem;color:var(--dim);line-height:1.45;}
+.nc-meta{display:flex;gap:8px;align-items:center;}
+.weight-badge{font-size:0.68rem;font-family:var(--mono);color:var(--green);padding:2px 6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:4px;}
+.tag{font-size:0.65rem;font-family:var(--mono);padding:2px 6px;border-radius:100px;background:var(--bg3);border:1px solid var(--border);color:var(--dim);}
+.nc-actions{display:flex;gap:6px;margin-top:4px;}
+.pinned-bar{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.pinned-count{font-size:0.82rem;color:var(--yellow);font-weight:500;}
+.empty{text-align:center;padding:40px;color:var(--dim);font-size:0.84rem;}
+.loading{color:var(--dim);font-size:0.82rem;padding:16px 0;display:flex;align-items:center;gap:8px;}
+.spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+<script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link">Query</a>
+      <a href="/ui/corpus.html" class="nav-link">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <span id="nav-user" style="font-size:0.78rem;color:var(--dim)"></span>
+      <a href="/ui/admin.html" class="nav-link">← Admin</a>
+    </div>
+  </div>
+</nav>
+<div class="page">
+  <div class="search-section">
+    <div class="search-row">
+      <input class="input" id="seed-input" placeholder="Enter a URL already in the corpus, or a topic/question to find a seed document…" onkeydown="if(event.key==='Enter')findSeed()"/>
+      <select class="ranker-sel" id="corpus-scope" style="min-width:160px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.84rem;outline:none;" title="Corpus filter">
+        <option value="all" selected>Public + Private</option>
+        <option value="public">Public only</option>
+        <option value="personal">My uploads only</option>
+      </select>
+      <button class="btn btn-primary" id="find-btn" onclick="findSeed()">Find</button>
+    </div>
+  </div>
+  <div id="breadcrumb" class="breadcrumb" style="display:none"></div>
+  <div id="seed-section"></div>
+  <div id="pinned-bar" style="display:none" class="pinned-bar">
+    <span class="pinned-count" id="pinned-count">0 pinned</span>
+    <span style="font-size:0.78rem;color:var(--dim)">Pin documents to find their shared neighborhood.</span>
+    <button class="btn-sm" onclick="findIntersection()">🔗 Find intersection</button>
+    <button class="btn-sm" onclick="clearPinned()">Clear</button>
+  </div>
+  <div id="neighbors-section"></div>
+</div>
+<script>
+const API='/api';
+let hopStack=[];
+let pinned=new Set();
+
+async function init(){
+  const me=await fetch(`${API}/auth/me`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!me||me.detail){window.location.href='/auth/google';return;}
+  if(!me.is_admin){window.location.href='/ui/app.html';return;}
+  document.getElementById('nav-user').textContent=me.email||'';
+  if(me.user_id) window._userId=me.user_id;
+  const params=new URLSearchParams(location.search);
+  const seed=params.get('seed');
+  if(seed){loadFromDocId(seed);}
+}
+
+async function findSeed(){
+  const val=document.getElementById('seed-input').value.trim();
+  if(!val)return;
+  const corpusScope=document.getElementById('corpus-scope')?.value||'all';
+  const corpusPayload=_corpusPayload(corpusScope);
+  const btn=document.getElementById('find-btn');
+  btn.disabled=true;
+  document.getElementById('seed-section').innerHTML='<div class="loading"><div class="spin"></div>Finding seed document…</div>';
+  // Query the corpus to find matching doc
+  const data=await fetch(`${API}/query`,{
+    method:'POST',credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query:val,limit:1,ranker:'rrf_chunks',...corpusPayload})
+  }).then(r=>r.ok?r.json():null).catch(()=>null);
+  btn.disabled=false;
+  if(!data||!data.results||!data.results.length){
+    document.getElementById('seed-section').innerHTML='<div class="empty">No matching document found in the corpus.</div>';
+    return;
+  }
+  const doc=data.results[0];
+  hopStack=[{id:doc.id,title:doc.title||'Untitled'}];
+  loadNeighbors(doc,true);
+}
+
+async function loadFromDocId(docId){
+  const doc=await fetch(`${API}/documents/${docId}`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!doc){return;}
+  if(!hopStack.find(h=>h.id===docId)){
+    hopStack.push({id:docId,title:doc.title||'Untitled'});
+  }
+  loadNeighbors(doc,false);
+}
+
+async function loadNeighbors(seedDoc,reset){
+  if(reset){hopStack=[{id:seedDoc.id,title:seedDoc.title||'Untitled'}];}
+  updateBreadcrumb();
+  history.replaceState(null,'',`?seed=${seedDoc.id}`);
+  renderSeed(seedDoc);
+  document.getElementById('neighbors-section').innerHTML='<div class="loading"><div class="spin"></div>Loading neighbors…</div>';
+  const neighbors=await fetch(`${API}/graph/neighbors/${seedDoc.id}?limit=24`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!neighbors||!neighbors.length){
+    document.getElementById('neighbors-section').innerHTML='<div class="empty">No neighbors found in the document graph for this document.</div>';
+    return;
+  }
+  renderNeighbors(neighbors);
+}
+
+function renderSeed(doc){
+  document.getElementById('seed-section').innerHTML=`
+    <div class="seed-card">
+      <div class="seed-label">Seed Document</div>
+      <div class="seed-title">${esc(doc.title||'Untitled')}</div>
+      <div class="seed-source">${esc(doc.source||doc.url||'')}</div>
+      ${doc.summary?`<div class="seed-summary">${esc(doc.summary.slice(0,250))}${doc.summary.length>250?'…':''}</div>`:''}
+      <div class="seed-actions">
+        <a class="btn-sm" href="/ui/inspect.html?id=${doc.id}">🔍 Inspect</a>
+        ${doc.url?`<a class="btn-sm" href="${esc(doc.url)}" target="_blank">↗ Source</a>`:''}
+      </div>
+    </div>
+    <div class="section-label">Related Documents (${document.getElementById('neighbors-section').textContent.includes('Loading')?' loading…':''})</div>`;
+}
+
+function renderNeighbors(neighbors){
+  const el=document.getElementById('neighbors-section');
+  el.innerHTML=`<div class="section-label">${neighbors.length} neighbors in document graph</div>
+    <div class="neighbors-grid">`+
+    neighbors.map(n=>`
+      <div class="neighbor-card${pinned.has(n.doc_id)?' pinned':''}" id="nc-${n.doc_id}">
+        <div class="nc-title">${esc(n.title||'Untitled')}</div>
+        <div class="nc-source">${esc(n.source||'')}</div>
+        ${n.summary?`<div class="nc-summary">${esc((n.summary||'').slice(0,120))}…</div>`:''}
+        <div class="nc-meta">
+          <span class="weight-badge">w:${Number(n.weight||0).toFixed(3)}</span>
+          ${(n.keywords||[]).slice(0,3).map(k=>`<span class="tag">${esc(k)}</span>`).join('')}
+        </div>
+        <div class="nc-actions">
+          <button class="btn-sm" onclick="hopTo('${n.doc_id}','${esc(n.title||'')}')">🔗 Explore</button>
+          <button class="btn-sm${pinned.has(n.doc_id)?' active':''}" onclick="togglePin('${n.doc_id}','${esc(n.title||'')}',this)">📌 ${pinned.has(n.doc_id)?'Pinned':'Pin'}</button>
+          <a class="btn-sm" href="/ui/inspect.html?id=${n.doc_id}">🔍 Inspect</a>
+        </div>
+      </div>`).join('')+
+    '</div>';
+}
+
+async function hopTo(docId,title){
+  if(!hopStack.find(h=>h.id===docId)){hopStack.push({id:docId,title});}
+  const doc=await fetch(`${API}/documents/${docId}`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(doc){loadNeighbors(doc,false);}
+}
+
+function togglePin(docId,title,btn){
+  if(pinned.has(docId)){pinned.delete(docId);}
+  else{pinned.add(docId);}
+  btn.classList.toggle('active');
+  btn.textContent=pinned.has(docId)?'📌 Pinned':'📌 Pin';
+  document.getElementById(`nc-${docId}`)?.classList.toggle('pinned',pinned.has(docId));
+  const bar=document.getElementById('pinned-bar');
+  bar.style.display=pinned.size>0?'flex':'none';
+  document.getElementById('pinned-count').textContent=`${pinned.size} pinned`;
+}
+
+async function findIntersection(){
+  const ids=[...pinned];
+  if(ids.length<2){alert('Pin at least 2 documents first.');return;}
+  document.getElementById('neighbors-section').innerHTML='<div class="loading"><div class="spin"></div>Finding intersection…</div>';
+  const data=await fetch(`${API}/graph/intersection`,{
+    method:'POST',credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({doc_ids:ids,limit:20,min_overlap:2})
+  }).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!data||!data.docs||!data.docs.length){
+    document.getElementById('neighbors-section').innerHTML='<div class="empty">No shared neighbors found between pinned documents.</div>';
+    return;
+  }
+  document.getElementById('neighbors-section').innerHTML=
+    `<div class="section-label">Intersection — ${data.docs.length} docs in neighborhood of ${ids.length} pinned documents</div>
+    <div class="neighbors-grid">`+
+    data.docs.map(n=>`
+      <div class="neighbor-card">
+        <div class="nc-title">${esc(n.title||'Untitled')}</div>
+        <div class="nc-source">${esc(n.source||'')}</div>
+        ${n.summary?`<div class="nc-summary">${esc((n.summary||'').slice(0,120))}…</div>`:''}
+        <div class="nc-meta">
+          <span class="weight-badge">overlap:${n.overlap_count}</span>
+          ${(n.keywords||[]).slice(0,3).map(k=>`<span class="tag">${esc(k)}</span>`).join('')}
+        </div>
+        <div class="nc-actions">
+          <button class="btn-sm" onclick="hopTo('${n.doc_id}','${esc(n.title||'')}')">🔗 Explore</button>
+          <a class="btn-sm" href="/ui/inspect.html?id=${n.doc_id}">🔍 Inspect</a>
+        </div>
+      </div>`).join('')+
+    '</div>';
+}
+
+function clearPinned(){pinned.clear();document.getElementById('pinned-bar').style.display='none';document.querySelectorAll('.neighbor-card.pinned').forEach(el=>el.classList.remove('pinned'));}
+
+function updateBreadcrumb(){
+  const bc=document.getElementById('breadcrumb');
+  if(hopStack.length<=1){bc.style.display='none';return;}
+  bc.style.display='flex';
+  bc.innerHTML=hopStack.map((h,i)=>`
+    ${i>0?'<span class="bc-sep">→</span>':''}
+    <span class="bc-item${i===hopStack.length-1?' current':''}" onclick="hopStack=hopStack.slice(0,${i+1});loadFromDocId('${h.id}')">${esc(h.title.slice(0,30))}</span>
+  `).join('');
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _corpusPayload(scope){
+  if(!scope||scope==='all')return{};
+  if(scope==='public')return{corpus_scope:'public'};
+  if(scope==='personal'){
+    const uid=window._userId||null;
+    const ids=uid?[`user:${uid}`]:null;
+    return ids?{corpus_scope:'personal',corpus_ids:ids}:{corpus_scope:'personal'};
+  }
+  return{};
+}
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window._pfx=(function(){var m=location.pathname.match(/^(\/t\/[^/]+)/);return m?m[1]:'';})();</script>
+<script>(function(){var t=localStorage.getItem('dewie-theme')||'signal';document.documentElement.setAttribute('data-theme',t);})()</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='17' r='13' fill='%234c1d95' stroke='%23c9922a' stroke-width='1.5'/><circle cx='16' cy='17' r='10' fill='none' stroke='%23c9922a' stroke-width='0.8' stroke-dasharray='2 1.5'/><circle cx='16' cy='17' r='6.5' fill='none' stroke='%23c9922a' stroke-width='0.8'/><line x1='16' y1='4' x2='16' y2='30' stroke='%23c9922a' stroke-width='0.7' opacity='0.5'/><line x1='3' y1='17' x2='29' y2='17' stroke='%23c9922a' stroke-width='0.7' opacity='0.5'/><line x1='7' y1='8' x2='25' y2='26' stroke='%23c9922a' stroke-width='0.7' opacity='0.4'/><line x1='25' y1='8' x2='7' y2='26' stroke='%23c9922a' stroke-width='0.7' opacity='0.4'/><circle cx='16' cy='17' r='2' fill='%23c9922a'/><line x1='16' y1='17' x2='22' y2='10' stroke='%23f0c040' stroke-width='1.2' stroke-linecap='round'/><line x1='16' y1='17' x2='10' y2='22' stroke='%23e0b0f0' stroke-width='1' stroke-linecap='round'/><rect x='14.5' y='1' width='3' height='3.5' rx='0.5' fill='%23c9922a'/><circle cx='16' cy='2.5' r='1' fill='none' stroke='%23c9922a' stroke-width='0.8'/></svg>" type="image/svg+xml" /><title>Dewie — Retrieval Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07070f;--bg2:#0d0d1a;--bg3:#12121f;--border:var(--border);--purple:var(--purple);--purple-lo:var(--purple-lo);--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--dim:#64748b;--xdim:#334155;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px);background-size:48px 48px;}
+nav{position:sticky;top:0;z-index:100;background:rgba(7,7,15,0.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
+.nav-logo-mark{width:28px;height:28px;background:var(--purple);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.nav-logo-mark svg{width:15px;height:15px;fill:#fff;}
+.nav-logo-text{font-family:var(--mono);font-size:0.9rem;font-weight:500;color:var(--text);}
+.nav-logo-text span{color:var(--purple);}
+.nav-badge{font-size:0.68rem;font-family:var(--mono);color:var(--accent-light);background:var(--purple-lo);border:1px solid var(--border);border-radius:4px;padding:2px 7px;margin-left:8px;}
+.nav-links{display:flex;align-items:center;gap:2px;}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.nav-link{font-size:0.82rem;color:var(--dim);text-decoration:none;padding:5px 12px;border-radius:6px;transition:all 0.15s;}
+.nav-link:hover{color:var(--text);background:var(--purple-lo);}
+.nav-link.active{color:var(--text);background:var(--purple-lo);}
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:24px;display:grid;grid-template-columns:1fr 360px;gap:20px;}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;}}
+.search-bar{grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;}
+.query-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:0.95rem;font-family:var(--sans);outline:none;transition:border-color 0.15s;}
+.query-input:focus{border-color:var(--purple);}
+.query-input::placeholder{color:var(--xdim);}
+select.ranker-sel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:0.84rem;font-family:var(--sans);outline:none;cursor:pointer;min-width:160px;}
+.btn{padding:11px 20px;border-radius:8px;border:none;cursor:pointer;font-size:0.84rem;font-weight:500;font-family:var(--sans);transition:all 0.15s;}
+.btn-primary{background:var(--purple);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--purple-dark);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+.results-col{display:flex;flex-direction:column;gap:12px;}
+.meta-row{font-size:0.75rem;color:var(--dim);font-family:var(--mono);padding:4px 0;}
+.result-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;}
+.result-card:hover{border-color:var(--border-hi);}
+.result-card.expanded{border-color:var(--purple);}
+.rc-header{padding:16px 20px;display:flex;gap:12px;align-items:flex-start;}
+.rc-score{font-family:var(--mono);font-size:1.4rem;font-weight:600;color:#4ade80;min-width:56px;text-align:right;line-height:1.2;}
+.rc-score.mid{color:var(--yellow);}
+.rc-score.low{color:var(--red);}
+.rc-body{flex:1;min-width:0;}
+.rc-title{font-size:0.9rem;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rc-source{font-size:0.72rem;color:var(--dim);font-family:var(--mono);margin-bottom:6px;}
+.rc-summary{font-size:0.78rem;color:var(--dim);line-height:1.5;margin-bottom:8px;}
+.rc-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.tag{font-size:0.65rem;font-family:var(--mono);padding:2px 7px;border-radius:100px;background:var(--bg3);border:1px solid var(--border);color:var(--dim);}
+.tag.aq{background:var(--purple-lo);border-color:var(--border-hi);color:var(--accent-light);}
+.rc-meta{display:flex;gap:12px;font-size:0.7rem;font-family:var(--mono);color:var(--xdim);margin-top:6px;}
+.rc-expand{padding:16px 20px;border-top:1px solid var(--border);display:none;background:var(--bg3);}
+.result-card.expanded .rc-expand{display:block;}
+.expand-section{margin-bottom:14px;}
+.expand-label{font-size:0.65rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:var(--xdim);margin-bottom:6px;}
+.aq-list{display:flex;flex-direction:column;gap:4px;}
+.aq-item{font-size:0.78rem;color:var(--accent-light);padding:4px 8px;background:var(--purple-lo);border-radius:5px;border-left:2px solid var(--purple);}
+.chunk-box{font-size:0.75rem;font-family:var(--mono);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--dim);line-height:1.5;}
+.expand-actions{display:flex;gap:8px;margin-top:12px;}
+.btn-sm{font-size:0.72rem;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;}
+.btn-sm:hover{border-color:var(--border-hi);color:var(--text);}
+.side-panel{display:flex;flex-direction:column;gap:12px;}
+.side-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.side-title{font-size:0.72rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);margin-bottom:12px;}
+.neighbor-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.neighbor-item:last-child{border-bottom:none;}
+.neighbor-item:hover .ni-title{color:var(--accent-light);}
+.ni-title{font-size:0.82rem;font-weight:500;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color 0.15s;}
+.ni-weight{font-family:var(--mono);font-size:0.68rem;color:var(--green);}
+.ni-source{font-size:0.68rem;color:var(--dim);}
+.empty{text-align:center;padding:40px;color:var(--dim);font-size:0.84rem;}
+.loading{color:var(--dim);font-size:0.82rem;padding:16px 0;display:flex;align-items:center;gap:8px;}
+.spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+<script>(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=window._pfx+"/ui/theme.css";document.head.appendChild(l);})()</script>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/ui/app.html" class="nav-logo">
+      <div class="nav-logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10c-2.67 0-5-1.34-6.4-3.37.03-2.12 4.27-3.3 6.4-3.3s6.37 1.18 6.4 3.3C15 13.66 12.67 15 10 15z"/></svg></div>
+      <span class="nav-logo-text">dewie</span>
+    </a>
+    <div class="nav-links">
+      <a href="/ui/app.html" class="nav-link">Query</a>
+      <a href="/ui/corpus.html" class="nav-link">Corpus</a>
+      <a href="/ui/documents.html" class="nav-link">Catalog</a>
+      <a href="/ui/my-uploads.html" class="nav-link">Uploads</a>
+    </div>
+    <div class="nav-right">
+      <span id="nav-user" style="font-size:0.78rem;color:var(--dim)"></span>
+      <a href="/ui/admin.html" class="nav-link">← Admin</a>
+    </div>
+  </div>
+</nav>
+<div class="wrap">
+  <div class="search-bar">
+    <input class="query-input" id="q" placeholder="Enter a query to see raw retrieval results…" onkeydown="if(event.key==='Enter')search()"/>
+    <select class="ranker-sel" id="ranker"><option value="rrf_chunks">rrf_chunks (default)</option></select>
+    <select class="ranker-sel" id="corpus-scope" title="Corpus filter">
+      <option value="all" selected>Public + Private</option>
+      <option value="public">Public only</option>
+      <option value="personal">My uploads only</option>
+    </select>
+    <button class="btn btn-primary" id="search-btn" onclick="search()">Search</button>
+  </div>
+  <div class="results-col">
+    <div id="meta-row" class="meta-row"></div>
+    <div id="results"></div>
+  </div>
+  <div class="side-panel">
+    <div class="side-card" id="side-panel">
+      <div class="side-title">Find Similar</div>
+      <div style="font-size:0.78rem;color:var(--dim)">Click a result then "Find Similar" to explore neighbors via the document graph.</div>
+    </div>
+  </div>
+</div>
+<script>
+const API = window._pfx + '/api';
+let currentResults = [];
+
+async function init() {
+  const me = await fetch(`${API}/auth/me`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if (!me||me.detail){window.location.href='/auth/google';return;}
+  if (!me.is_admin){window.location.href='/ui/app.html';return;}
+  document.getElementById('nav-user').textContent=me.email||'';
+  if (me.user_id) window._userId = me.user_id;
+  const q=new URLSearchParams(location.search).get('q');
+  if(q) document.getElementById('q').value=q;
+  await loadRankers();
+  if(q) search();
+}
+
+async function loadRankers() {
+  const rankers = await fetch(`${API}/query/rankers`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!rankers||!Array.isArray(rankers)) return;
+  const sel=document.getElementById('ranker');
+  sel.innerHTML=rankers.map(r=>`<option value="${esc(r.id)}"${r.id==='rrf_chunks'?' selected':''}>${esc(r.label||r.id)}</option>`).join('');
+}
+
+async function search() {
+  const q=document.getElementById('q').value.trim();
+  if(!q)return;
+  const ranker=document.getElementById('ranker').value;
+  const corpusScope=document.getElementById('corpus-scope')?.value||'all';
+  const corpusPayload=_corpusPayload(corpusScope);
+  const btn=document.getElementById('search-btn');
+  btn.disabled=true;
+  document.getElementById('results').innerHTML='<div class="loading"><div class="spin"></div>Running retrieval…</div>';
+  document.getElementById('meta-row').textContent='';
+  history.replaceState(null,'',`?q=${encodeURIComponent(q)}&ranker=${encodeURIComponent(ranker)}`);
+  const t0=Date.now();
+  const data=await fetch(`${API}/query`,{
+    method:'POST',credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query:q,limit:20,ranker,...corpusPayload})
+  }).then(r=>r.ok?r.json():null).catch(()=>null);
+  btn.disabled=false;
+  if(!data||!data.results){document.getElementById('results').innerHTML='<div class="empty">Request failed.</div>';return;}
+  const elapsed=Date.now()-t0;
+  currentResults=data.results;
+  document.getElementById('meta-row').textContent=`${data.results.length} results · ranker: ${ranker} · corpus: ${corpusScope} · ${elapsed}ms`;
+  renderResults(data.results);
+}
+
+function renderResults(results) {
+  const el=document.getElementById('results');
+  if(!results.length){el.innerHTML='<div class="empty">No results.</div>';return;}
+  el.innerHTML=results.map((r,i)=>{
+    const scoreVal=r.score??0;
+    const scoreClass=scoreVal>0.5?'':'scoreVal>0.2?''mid':'low';
+    const scoreDisplay=(scoreVal*100).toFixed(1);
+    const aqCount=Array.isArray(r.answers_questions)?r.answers_questions.length:0;
+    const kwTags=(r.keywords||[]).slice(0,5).map(k=>`<span class="tag">${esc(k)}</span>`).join('');
+    const aqBadge=aqCount?`<span class="tag aq">${aqCount} AQs</span>`:'';
+    const edgeBadge=r.edge_count?`<span class="tag">${r.edge_count} edges</span>`:'';
+    return `<div class="result-card" id="rc-${i}" onclick="toggleExpand(${i})">
+      <div class="rc-header">
+        <div class="rc-score ${scoreClass}">${scoreDisplay}</div>
+        <div class="rc-body">
+          <div class="rc-title">${esc(r.title||'Untitled')}</div>
+          <div class="rc-source">${esc(r.source||r.url||'')}</div>
+          <div class="rc-summary">${esc((r.summary||'').slice(0,150))}${(r.summary||'').length>150?'…':''}</div>
+          <div class="rc-tags">${kwTags}${aqBadge}${edgeBadge}</div>
+          ${r.chunk_match?`<div class="rc-meta">chunk match: ${r.chunk_score?(r.chunk_score*100).toFixed(1):''}</div>`:''}
+        </div>
+      </div>
+      <div class="rc-expand">
+        ${r.summary?`<div class="expand-section"><div class="expand-label">Summary</div><div style="font-size:0.8rem;line-height:1.6;color:#cbd5e1">${esc(r.summary)}</div></div>`:''}
+        ${aqCount?`<div class="expand-section"><div class="expand-label">Answers Questions (${aqCount})</div><div class="aq-list">${(r.answers_questions||[]).map(q=>`<div class="aq-item">${esc(q)}</div>`).join('')}</div></div>`:''}
+        ${r.chunk_match?`<div class="expand-section"><div class="expand-label">Best Chunk Match (score: ${r.chunk_score?(r.chunk_score*100).toFixed(1):''})</div><div class="chunk-box">${esc(r.chunk_match)}</div></div>`:''}
+        ${(r.keywords||[]).length?`<div class="expand-section"><div class="expand-label">Keywords</div><div class="rc-tags">${(r.keywords||[]).map(k=>`<span class="tag">${esc(k)}</span>`).join('')}</div></div>`:''}
+        <div class="expand-actions">
+          <button class="btn-sm" onclick="event.stopPropagation();findSimilar('${r.id}','${esc(r.title||'')}')">🔗 Find Similar</button>
+          <a class="btn-sm" href="/ui/inspect.html?id=${r.id}" onclick="event.stopPropagation()">🔍 Inspect</a>
+          ${r.url?`<a class="btn-sm" href="${esc(r.url)}" target="_blank" onclick="event.stopPropagation()">↗ Source</a>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleExpand(i) {
+  const card=document.getElementById(`rc-${i}`);
+  card.classList.toggle('expanded');
+}
+
+async function findSimilar(docId,title) {
+  const panel=document.getElementById('side-panel');
+  panel.innerHTML=`<div class="side-title">Similar to</div><div style="font-size:0.8rem;font-weight:500;margin-bottom:12px;color:var(--accent-light)">${esc(title)}</div><div class="loading"><div class="spin"></div>Loading neighbors…</div>`;
+  const neighbors=await fetch(`${API}/graph/neighbors/${docId}?limit=20`,{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(!neighbors||!neighbors.length){
+    panel.innerHTML=`<div class="side-title">Similar to</div><div style="font-size:0.8rem;font-weight:500;margin-bottom:12px;color:var(--accent-light)">${esc(title)}</div><div class="empty" style="padding:20px">No neighbors found in the graph.</div>`;
+    return;
+  }
+  panel.innerHTML=`<div class="side-title">Similar to "${esc(title.slice(0,30))}"</div>`+
+    neighbors.map(n=>`<div class="neighbor-item" onclick="window.location='/ui/retrieval-explorer.html?q='+encodeURIComponent('${esc(n.title||'')}')">
+      <div class="ni-title">${esc(n.title||'Untitled')}</div>
+      <div style="display:flex;gap:8px;margin-top:2px">
+        <span class="ni-source">${esc(n.source||'')}</span>
+        <span class="ni-weight">w:${Number(n.weight||0).toFixed(3)}</span>
+      </div>
+    </div>`).join('');
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _corpusPayload(scope){
+  if(!scope||scope==='all')return{};
+  if(scope==='public')return{corpus_scope:'public'};
+  if(scope==='personal'){
+    const uid=window._userId||null;
+    const ids=uid?[`user:${uid}`]:null;
+    return ids?{corpus_scope:'personal',corpus_ids:ids}:{corpus_scope:'personal'};
+  }
+  return{};
+}
+init();
+</script>
+<script>(function(){var s=document.createElement("script");s.src=window._pfx+"/ui/theme-picker.js";s.defer=true;document.head.appendChild(s);})()</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(!window._pfx)return;
+  document.querySelectorAll('a[href^="/ui/"]').forEach(function(a){
+    a.href=window._pfx+a.getAttribute('href');
+  });
+});
+</script>
+</body>
+</html>
