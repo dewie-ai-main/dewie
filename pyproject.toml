@@ -37,7 +37,7 @@ dependencies = [
     "alembic>=1.14.0",
     "psycopg2-binary>=2.9.12",    # alembic sync runner (migrations/env.py) needs a sync driver
     # Storage: Redis cache
-    "redis[hiredis]>=5.2.0",
+    "redis[hiredis]>=8.1.0",
     # Content ingestion
     "feedparser>=6.0.12",
     "httpx>=0.28.0",
