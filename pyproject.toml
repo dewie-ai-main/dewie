@@ -40,7 +40,7 @@ dependencies = [
     "redis[hiredis]>=5.2.0",
     # Content ingestion
     "feedparser>=6.0.12",
-    "httpx>=0.28.0",
+    "httpx>=0.28.1",
     "watchdog>=6.0.0",          # file system watcher for data/bodies/ auto-ingest
     "langdetect>=1.0.9",        # pre-enrichment language gate — skip non-English docs
     "trafilatura>=2.1.0",       # full-article extraction from RSS/web URLs
@@ -101,7 +101,7 @@ dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
-    "httpx>=0.28.0",          # async test client
+    "httpx>=0.28.1",          # async test client
     "fakeredis[aioredis]>=2.26.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
