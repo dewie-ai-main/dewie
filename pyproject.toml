@@ -31,7 +31,7 @@ dependencies = [
     "mcp>=1.0.0,<2.0.0",  # mcp 2.0 dropped mcp.server.fastmcp (used by our MCP server)
     "uvicorn[standard]>=0.32.0",
     # Storage: PostgreSQL
-    "sqlalchemy[asyncio]>=2.0.51",
+    "sqlalchemy[asyncio]>=2.0.52",
     "asyncpg>=0.30.0",
     "aiosqlite>=0.19.0",           # SQLite async dialect for SQLAlchemy (sqlite+aiosqlite:// DSNs)
     "alembic>=1.14.0",
