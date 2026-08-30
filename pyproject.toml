@@ -80,7 +80,7 @@ podcast = [
 
 media = [
     "youtube-transcript-api>=0.6.0",
-    "yt-dlp>=2026.6.9",
+    "yt-dlp>=2026.8.19",
     "openai-whisper>=20231117",
 ]
 formats = [
